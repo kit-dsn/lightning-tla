@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.lamport.tla.toolbox.tool.tlc.modelCheck">
+    <stringAttribute key="TLCCmdLineParameters" value=""/>
+    <stringAttribute key="alias" value=""/>
+    <intAttribute key="collectCoverage" value="1"/>
+    <stringAttribute key="configurationName" value="MultiA3B1B1"/>
+    <booleanAttribute key="deferLiveness" value="false"/>
+    <intAttribute key="dfidDepth" value="100"/>
+    <booleanAttribute key="dfidMode" value="false"/>
+    <intAttribute key="distributedFPSetCount" value="0"/>
+    <stringAttribute key="distributedNetworkInterface" value="172.25.162.198"/>
+    <intAttribute key="distributedNodesCount" value="1"/>
+    <stringAttribute key="distributedTLC" value="off"/>
+    <stringAttribute key="distributedTLCVMArgs" value=""/>
+    <intAttribute key="fpBits" value="1"/>
+    <intAttribute key="fpIndex" value="0"/>
+    <booleanAttribute key="fpIndexRandom" value="true"/>
+    <intAttribute key="maxHeapSize" value="25"/>
+    <intAttribute key="maxSetSize" value="1000000"/>
+    <booleanAttribute key="mcMode" value="true"/>
+    <stringAttribute key="modelBehaviorInit" value=""/>
+    <stringAttribute key="modelBehaviorNext" value=""/>
+    <stringAttribute key="modelBehaviorSpec" value="SpecIV"/>
+    <intAttribute key="modelBehaviorSpecType" value="1"/>
+    <stringAttribute key="modelBehaviorVars" value="UserPreimageInventory, UserNewPayments, ExternalPayments, ChannelUserBalance, ChannelUserVars, UserPayments, UserExtBalance, UserPaymentSecretForPreimage, LedgerTime, ChannelUserState, ChannelPendingBalance, Messages, UserChannelBalance, UserLatePreimages, UserHonest, ChannelMessages"/>
+    <stringAttribute key="modelComments" value=""/>
+    <booleanAttribute key="modelCorrectnessCheckDeadlock" value="false"/>
+    <listAttribute key="modelCorrectnessInvariants"/>
+    <listAttribute key="modelCorrectnessProperties">
+        <listEntry value="1IdealPayments!Spec"/>
+        <listEntry value="1IdealUser(1)!Spec"/>
+        <listEntry value="1IdealUser(2)!Spec"/>
+        <listEntry value="1IdealUser(3)!Spec"/>
+    </listAttribute>
+    <intAttribute key="modelEditorOpenTabs" value="12"/>
+    <stringAttribute key="modelExpressionEval" value=""/>
+    <listAttribute key="modelParameterConstants">
+        <listEntry value="ActiveChannels;;{1, 2};0;0"/>
+        <listEntry value="SingleSignature;;SingleSignature;1;0"/>
+        <listEntry value="UserInitialPayments;;&lt;&lt;&#10;    {&#10;&#9;    [id |-&gt; 1, amount |-&gt; 3, path |-&gt; &lt;&lt;[name |-&gt; &quot;UserA&quot;], [name |-&gt; &quot;UserB&quot;], [name |-&gt; &quot;UserC&quot;]&gt;&gt;, absTimelock |-&gt; 15]&#10;    },&#10;    {&#10;    &#9;[id |-&gt; 2, amount |-&gt; 1, path |-&gt; &lt;&lt;[name |-&gt; &quot;UserB&quot;], [name |-&gt; &quot;UserA&quot;]&gt;&gt;, absTimelock |-&gt; 9],&#10;    [id |-&gt; 3, amount |-&gt; 1, path |-&gt; &lt;&lt;[name |-&gt; &quot;UserB&quot;], [name |-&gt; &quot;UserC&quot;]&gt;&gt;, absTimelock |-&gt; 12]&#10;    },&#10;    {&#10;    },&#10;    {&#10;    },&#10;    {&#10;    },&#10;    {&#10;    }&#10;&gt;&gt;;0;0"/>
+        <listEntry value="MAX_TIME;;50;0;0"/>
+        <listEntry value="AllSigHashLock;;AllSigHashLock;1;0"/>
+        <listEntry value="SingleSigHashLock;;SingleSigHashLock;1;0"/>
+        <listEntry value="AllSignatures;;AllSignatures;1;0"/>
+        <listEntry value="NameForUserID;;&lt;&lt;[name |-&gt; &quot;UserA&quot;],&#10;[name |-&gt; &quot;UserB&quot;],&#10;[name |-&gt; &quot;UserC&quot;]&gt;&gt;;0;0"/>
+        <listEntry value="NullUser;;NullUser;1;0"/>
+        <listEntry value="RevKeyForUserID;;&lt;&lt;&quot;UserARev&quot;, &quot;UserBRev&quot;, &quot;UserCRev&quot;&gt;&gt;;0;0"/>
+        <listEntry value="OptimizedTxAge;;TRUE;0;0"/>
+        <listEntry value="UserInitialBalance;;&lt;&lt;10, 10, 0&gt;&gt;;0;0"/>
+    </listAttribute>
+    <intAttribute key="modelVersion" value="20191005"/>
+    <intAttribute key="numberOfWorkers" value="6"/>
+    <stringAttribute key="postCondition" value=""/>
+    <booleanAttribute key="recover" value="false"/>
+    <stringAttribute key="result.mail.address" value=""/>
+    <intAttribute key="simuAril" value="-1"/>
+    <intAttribute key="simuDepth" value="100"/>
+    <stringAttribute key="simuNumTraces" value="9223372036854775807"/>
+    <intAttribute key="simuSeed" value="-1"/>
+    <stringAttribute key="specName" value="SpecificationIV"/>
+    <stringAttribute key="tlcResourcesProfile" value="local custom"/>
+    <stringAttribute key="view" value=""/>
+    <booleanAttribute key="visualizeStateGraph" value="false"/>
+</launchConfiguration>
