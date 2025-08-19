@@ -1,8 +1,8 @@
 TLA+ Source Files for Paper "Model Checking the Security of the Lightning Network"
 ===========================================================================================================
 
-Overview over files contained in this archive
----------------------------------------------
+Overview of files
+-----------------
 
 The script `download-and-run-tlc.sh` downloads the model checker TLC and runs TLC in model checking mode for the scenarios that are listed in Table I and Table II in the paper and in simulation mode for a model for each refinement step.
 
@@ -73,17 +73,13 @@ The IDs correspond to the IDs of the scenarios used in the paper in Table 1.
 
 The following tables lists the files for the models that we used to verify the refinement mapping 4.
 
-|                   Scenario                    |                    File                    |
-|-----------------------------------------------|--------------------------------------------|
-| Payment from user A over B to user C          | SpecificationIV.toolbox/MultiA3/MC.tla     |
-| Two payments: Payment from user A over B to   | SpecificationIV.toolbox/MultiA3C2/MC.tla   |
-| C and payment from user C over B to A         |                                            |
-| Two concurrent payments: Payment from user A  | SpecificationIV.toolbox/MultiA3A2/MC.tla   |
-| over B to C and payment from user A to B      |                                            |
-| Three payments: Payment from user A over B to | SpecificationIV.toolbox/MultiA3B1B1/MC.tla |
-| C, payment from user B to A, and payment from |                                            |
-| user B to C                                   |                                            |
-| Payment from user A over B, C and D to user E | SpecificationIV.toolbox/MultiAE3/MC.tla    |
+|                   Scenario                                                                               |                    File                    |
+|----------------------------------------------------------------------------------------------------------|--------------------------------------------|
+| Payment from user A over B to user C                                                                     | SpecificationIV.toolbox/MultiA3/MC.tla     |
+| Two payments: Payment from user A over B to C and payment from user C over B to A                        | SpecificationIV.toolbox/MultiA3C2/MC.tla   |
+| Two concurrent payments: Payment from user A over B to C and payment from user A to B                    | SpecificationIV.toolbox/MultiA3A2/MC.tla   |
+| Three payments: Payment from user A over B to C, payment from user B to A, and payment from user B to C  | SpecificationIV.toolbox/MultiA3B1B1/MC.tla |
+| Payment from user A over B, C and D to user E                                                            | SpecificationIV.toolbox/MultiAE3/MC.tla    |
 
 Models for Simulation
 ---------------------
