@@ -1,7 +1,11 @@
 #!/bin/sh
 
 OUTPUT_DIR="output"
+
 TLA2TOOLS="/tlaplus/tla2tools.jar"
+if [ $# -eq 2 ]; then
+    TLA2TOOLS="$2"
+fi
 
 LEVEL=1
 case "$1" in
@@ -21,7 +25,7 @@ case "$1" in
         LEVEL=4
         ;;
     *)
-        echo "Usage: $0 [--smoke-test | --brief | --medium | --long | --all]"
+        echo "Usage: $0 <{--smoke-test | --brief | --medium | --long | --all}> [path to tla2tools]"
         exit 1
         ;;
 esac
