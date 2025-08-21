@@ -33,40 +33,40 @@ How to Run
 ----------
 
 The recommended way is to run the model checker directly on your Unix system. This requires `java` to be in your `$PATH`.
-Alternatively, you can use the docker image provided. Note that the model checker can be much slower when using docker compared to native execution.
+Alternatively, you can use the Docker image provided. Note that the model checker can be much slower when using Docker compared to native execution.
 The following explanation assumes that the working directory is the root directory of this repository.
 
 ### Natively
 
 Download the model checker using the script `./download-tlc.sh`. This creates the file `tla2tools.jar` in the current directory.
-Skip the next section about docker and continue with the section 'Model Checking'.
+Skip the next section about Docker and continue with the section 'Model Checking'.
 
 ### Using Docker
 
-Load the provided docker image: `docker load < docker-tlc-image.tar`
-Alternatively, download the image from docker hub: `docker pull matthias25/tlc` If you downloaded the image from docker hub, use `matthias25/tlc` instead of `tlc` in the subsequent command.
+Load the provided Docker image: `docker load < docker-tlc-image.tar`
+Alternatively, download the image from Docker Hub: `docker pull matthias25/tlc` If you downloaded the image from Docker Hub, use `matthias25/tlc` instead of `tlc` in the subsequent command.
 
 Then, run the container with: ```docker run -v $(pwd):/work --rm -it tlc```
-The option `-v` mounts the current directory in the docker container. The option `--rm` specifies that the docker container should be deleted after termination. The option `-it` starts an interactive shell inside the container.
+The option `-v` mounts the current directory in the Docker container. The option `--rm` specifies that the Docker container should be deleted after termination. The option `-it` starts an interactive shell inside the container.
 
 ### Model Checking
 
 The model checker can be started with the script `./run-tlc.sh`.
-The script takes two parameters. The first parameter is required and specifies which model checking jobs should be run; the second parameter points to the file `tla2tools.jar`. When using docker, the second parameter can be omitted.
+The script takes two parameters. The first parameter is required and specifies which model checking jobs should be run; the second parameter points to the file `tla2tools.jar`. When using Docker, the second parameter can be omitted.
 
 For a smoke test, start the script using the parameter `--smoke-test`: `./run-tlc.sh --smoke-test tla2tools.jar`
 The script creates a directory `output` where the output files are located and starts the model checker for a very simple model. After a couple of seconds, the script should terminate with the last line being `Successfully checked smoke_test.`.
 
-To run the actual models that have been used for the paper, the following options are available for the first parameter of the script `./run-tlc.sh`.
+To run the actual models that have been used for the paper, the following options are available for the first parameter of the script `./run-tlc.sh`. E.g., for a brief evalution, you can run `./run-tlc.sh --brief tla2tools.jar`.
 
 | Value    |                         Models                   | Runtime (40 cores) |
 |----------|--------------------------------------------------|--------------------|
 | --brief  | C1, C2, C3,         M1                           | ~ 30 min           |
 | --medium | C1, C2, C3,         M1, M2, M3                   | ~ 2 hours          |
 | --long   | C1, C2, C3, C4,     M1, M2, M3, M4, M5, S1 - S9  | ~ 2 days           |
-| --all    | C1, C2, C3, C4, C5, M1, M2, M3, M4, M5, S1 - S9  | ~ 7 weeks          |
+| --all    | C1, C2, C3, C4, C5, M1, M2, M3, M4, M5, S1 - S9  | ~ 8 weeks          |
 
-In the third column, the expected runtime on a server with a CPU with 40 physical cores is given (native execution without docker).
+In the third column, the expected runtime on a server with a CPU with 40 physical cores is given (native execution without Docker).
 Using only two cores, the runtime for the value `--brief` is about TODO TODO TODO.
 
 In the second column, the identifiers C1 to C5 refer to the entries in Table 1 (as in the paper).
