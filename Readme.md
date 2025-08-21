@@ -43,7 +43,7 @@ Skip the next section about Docker and continue with the section 'Model Checking
 
 ### Using Docker
 
-Load the provided Docker image: `docker load < docker-tlc-image.tar`
+Load the provided Docker image: `docker load < docker/docker-tlc-image.tar`
 Alternatively, download the image from Docker Hub: `docker pull matthias25/tlc` If you downloaded the image from Docker Hub, use `matthias25/tlc` instead of `tlc` in the subsequent command.
 
 Then, run the container with: ```docker run -v $(pwd):/work --rm -it tlc```
