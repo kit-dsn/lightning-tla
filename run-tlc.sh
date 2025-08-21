@@ -30,6 +30,8 @@ case "$1" in
         ;;
 esac
 
+# MEMORY: If a model checking job fails because memory did not suffice, make more memory available
+# by adding the paramter -Xmx. E.g. -Xmx72G for making 72 GB of RAM available.
 DEFAULT_JAVA_OPTS="-XX:+IgnoreUnrecognizedVMOptions -XX:+UseParallelGC"
 if [ -z "$JAVA_OPTS" ]; then
   JAVA_OPTS="$DEFAULT_JAVA_OPTS"
@@ -40,7 +42,9 @@ check_model_checking_success() {
     echo ""
     echo "-----------------"
     echo ""
-    grep "Model checking completed. No error has been found" $OUTPUT_DIR/$type.log > /dev/null && echo "Successfully checked $type." && return 0
+    grep "Model checking completed. No error has been found" $OUTPUT_DIR/$type.log > /dev/null && \
+    	echo "Successfully checked $type." && \
+    	return 0
     echo "$type Check failed."
     return 1
 }
@@ -71,9 +75,11 @@ if [ "$LEVEL" -ge 1 ]; then
 		exec java $JAVA_OPTS -cp $TLA2TOOLS tlc2.TLC SpecificationIIatoIIIa.toolbox/RefinementA5B3/MC.tla -workers auto -deadlock | tee $OUTPUT_DIR/C4.log
 		check_model_checking_success "C4"
 
-		echo "Model checking C5: Two concurrent payments from user A to user B"
-		exec java $JAVA_OPTS -cp $TLA2TOOLS tlc2.TLC SpecificationIIatoIIIa.toolbox/RefinementA5A3/MC.tla -workers auto -deadlock | tee $OUTPUT_DIR/C5.log
-		check_model_checking_success "C5"
+		if [ "$LEVEL" -ge 4 ]; then
+			echo "Model checking C5: Two concurrent payments from user A to user B"
+			exec java $JAVA_OPTS -cp $TLA2TOOLS tlc2.TLC SpecificationIIatoIIIa.toolbox/RefinementA5A3/MC.tla -workers auto -deadlock | tee $OUTPUT_DIR/C5.log
+			check_model_checking_success "C5"
+		fi
 	fi
 
 	echo "Model checking M1: Payment from user A over B to user C"
@@ -95,11 +101,9 @@ if [ "$LEVEL" -ge 1 ]; then
 		exec java $JAVA_OPTS -cp $TLA2TOOLS tlc2.TLC SpecificationIV.toolbox/MultiA3B1B1/MC.tla -workers auto -deadlock | tee $OUTPUT_DIR/M4.log
 		check_model_checking_success "M4"
 
-		if [ "$LEVEL" -ge 4 ]; then
-			echo "Model checking M5: Payment from user A over user B, user C, and user D to user E"
-			exec java $JAVA_OPTS -cp $TLA2TOOLS tlc2.TLC SpecificationIV.toolbox/MultiAE3/MC.tla -workers auto -deadlock | tee $OUTPUT_DIR/M5.log
-			check_model_checking_success "M5"
-		fi
+		echo "Model checking M5: Payment from user A over user B, user C, and user D to user E"
+		exec java $JAVA_OPTS -cp $TLA2TOOLS tlc2.TLC SpecificationIV.toolbox/MultiAE3/MC.tla -workers auto -deadlock | tee $OUTPUT_DIR/M5.log
+		check_model_checking_success "M5"
 	fi
 
 	if [ "$LEVEL" -ge 3 ]; then
