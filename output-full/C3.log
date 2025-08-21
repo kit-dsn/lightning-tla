@@ -1,0 +1,129 @@
+TLC2 Version 2.20 of Day Month 20?? (rev: 29f604f)
+Running breadth-first search Model-Checking with fp 77 and seed 7039970807603124139 with 96 workers on 192 cores with 27305MB heap and 64MB offheap memory [pid: 183336] (Linux 6.8.0-71-generic amd64, Ubuntu 21.0.8 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/grundmann/lightning-tla/SpecificationIIatoIIIa.toolbox/RefinementCToD/MC.tla
+Parsing file /home/grundmann/lightning-tla/SpecificationIIatoIIIa.tla
+Parsing file /tmp/tlc-12026840588773913353/TLC.tla (jar:file:/home/grundmann/lightning-tla/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-12026840588773913353/_TLCTrace.tla (jar:file:/home/grundmann/lightning-tla/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /home/grundmann/lightning-tla/SpecificationIIa.tla
+Parsing file /home/grundmann/lightning-tla/SpecificationIItoIII.tla
+Parsing file /home/grundmann/lightning-tla/SpecificationII.tla
+Parsing file /home/grundmann/lightning-tla/SpecificationI.tla
+Parsing file /home/grundmann/lightning-tla/AbstractionHelpers.tla
+Parsing file /home/grundmann/lightning-tla/HTLCUserHelper.tla
+Parsing file /home/grundmann/lightning-tla/BaseSpec.tla
+Parsing file /tmp/tlc-12026840588773913353/Integers.tla (jar:file:/home/grundmann/lightning-tla/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Parsing file /tmp/tlc-12026840588773913353/Naturals.tla (jar:file:/home/grundmann/lightning-tla/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-12026840588773913353/FiniteSets.tla (jar:file:/home/grundmann/lightning-tla/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-12026840588773913353/Sequences.tla (jar:file:/home/grundmann/lightning-tla/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /home/grundmann/lightning-tla/SumAmounts.tla
+Parsing file /home/grundmann/lightning-tla/SpecificationIIIa.tla
+Parsing file /home/grundmann/lightning-tla/SpecificationIII.tla
+Parsing file /home/grundmann/lightning-tla/MultiHopMock.tla
+Parsing file /home/grundmann/lightning-tla/LedgerTime.tla
+Parsing file /home/grundmann/lightning-tla/Ledger.tla
+Parsing file /home/grundmann/lightning-tla/LedgerHelper.tla
+Parsing file /home/grundmann/lightning-tla/PaymentChannelUser.tla
+Parsing file /home/grundmann/lightning-tla/PCUHelper.tla
+Parsing file /home/grundmann/lightning-tla/HTLCUser.tla
+Parsing file /home/grundmann/lightning-tla/IdealPayments.tla
+Parsing file /home/grundmann/lightning-tla/IdealUser.tla
+Parsing file /home/grundmann/lightning-tla/TransactionIdOracle.tla
+Parsing file /home/grundmann/lightning-tla/PaymentChannelUserWithHistory.tla
+Parsing file /home/grundmann/lightning-tla/PCAbstract.tla
+Parsing file /tmp/tlc-12026840588773913353/TLCExt.tla (jar:file:/home/grundmann/lightning-tla/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Semantic processing of module Naturals
+Semantic processing of module Integers
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module SumAmounts
+Semantic processing of module TLC
+Semantic processing of module AbstractionHelpers
+Semantic processing of module HTLCUserHelper
+Semantic processing of module IdealPayments
+Semantic processing of module IdealUser
+Semantic processing of module BaseSpec
+Semantic processing of module LedgerHelper
+Semantic processing of module Ledger
+Semantic processing of module PCUHelper
+Semantic processing of module TransactionIdOracle
+Semantic processing of module PaymentChannelUser
+Semantic processing of module HTLCUser
+Semantic processing of module LedgerTime
+Semantic processing of module SpecificationI
+Semantic processing of module SpecificationII
+Semantic processing of module MultiHopMock
+Semantic processing of module SpecificationIIa
+Semantic processing of module PCAbstract
+Semantic processing of module SpecificationIII
+Semantic processing of module PaymentChannelUserWithHistory
+Semantic processing of module SpecificationIItoIII
+Semantic processing of module SpecificationIIIa
+Semantic processing of module SpecificationIIatoIIIa
+Semantic processing of module TLCExt
+Semantic processing of module _TLCTrace
+Semantic processing of module MC
+Linting of module SumAmounts
+Linting of module AbstractionHelpers
+Linting of module HTLCUserHelper
+Linting of module IdealPayments
+Linting of module IdealUser
+Linting of module BaseSpec
+Linting of module LedgerHelper
+Linting of module Ledger
+Linting of module PCUHelper
+Linting of module TransactionIdOracle
+Linting of module PaymentChannelUser
+Linting of module HTLCUser
+Linting of module LedgerTime
+Linting of module SpecificationI
+Linting of module SpecificationII
+Linting of module MultiHopMock
+Linting of module SpecificationIIa
+Linting of module PCAbstract
+Linting of module SpecificationIII
+Linting of module PaymentChannelUserWithHistory
+Linting of module SpecificationIItoIII
+Linting of module SpecificationIIIa
+Linting of module SpecificationIIatoIIIa
+Linting of module TLCExt
+Linting of module _TLCTrace
+Linting of module MC
+Starting... (2025-08-20 20:59:48)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Computed 2 initial states...
+Finished computing initial states: 4 distinct states generated at 2025-08-20 20:59:49.
+Checking temporal properties for the current state space with 2354 total distinct states at (2025-08-20 20:59:52)
+Finished checking temporal properties in 00s at 2025-08-20 20:59:52
+Progress(16) at 2025-08-20 20:59:52: 13,679 states generated (13,679 s/min), 3,465 distinct states found (3,465 ds/min), 1,107 states left on queue.
+Checking temporal properties for the current state space with 46969 total distinct states at (2025-08-20 21:00:53)
+Finished checking temporal properties in 00s at 2025-08-20 21:00:53
+Progress(31) at 2025-08-20 21:00:53: 561,119 states generated (547,440 s/min), 57,079 distinct states found (53,614 ds/min), 10,104 states left on queue.
+Checking temporal properties for the current state space with 97182 total distinct states at (2025-08-20 21:01:53)
+Finished checking temporal properties in 00s at 2025-08-20 21:01:54
+Progress(35) at 2025-08-20 21:01:54: 1,247,524 states generated (686,405 s/min), 113,237 distinct states found (56,158 ds/min), 16,046 states left on queue.
+Checking temporal properties for the current state space with 141217 total distinct states at (2025-08-20 21:02:54)
+Finished checking temporal properties in 01s at 2025-08-20 21:02:55
+Progress(38) at 2025-08-20 21:02:55: 1,986,653 states generated (739,129 s/min), 157,957 distinct states found (44,720 ds/min), 16,734 states left on queue.
+Checking temporal properties for the current state space with 177394 total distinct states at (2025-08-20 21:03:56)
+Finished checking temporal properties in 01s at 2025-08-20 21:03:57
+Progress(40) at 2025-08-20 21:03:57: 2,630,080 states generated (643,427 s/min), 192,791 distinct states found (34,834 ds/min), 15,387 states left on queue.
+Checking temporal properties for the current state space with 201626 total distinct states at (2025-08-20 21:04:58)
+Finished checking temporal properties in 01s at 2025-08-20 21:05:00
+Progress(42) at 2025-08-20 21:05:00: 3,088,937 states generated (458,857 s/min), 214,673 distinct states found (21,882 ds/min), 13,036 states left on queue.
+Progress(43) at 2025-08-20 21:06:00: 3,490,277 states generated (401,340 s/min), 229,120 distinct states found (14,447 ds/min), 10,431 states left on queue.
+Checking temporal properties for the current state space with 237349 total distinct states at (2025-08-20 21:07:01)
+Finished checking temporal properties in 01s at 2025-08-20 21:07:03
+Progress(45) at 2025-08-20 21:07:03: 4,022,426 states generated (532,149 s/min), 246,491 distinct states found (17,371 ds/min), 9,133 states left on queue.
+Progress(46) at 2025-08-20 21:07:39: 4,612,656 states generated, 252,932 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 252932 total distinct states at (2025-08-20 21:07:39)
+Finished checking temporal properties in 02s at 2025-08-20 21:07:41
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 6.0E-8
+  based on the actual fingerprints:  val = 1.3E-9
+4612656 states generated, 252932 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 46.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 12 and the 95th percentile is 3).
+Finished in 07min 54s at (2025-08-20 21:07:41)
