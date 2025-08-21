@@ -1,5 +1,10 @@
 ------------------------ MODULE TransactionIdOracle ------------------------
 
+(***************************************************************************)
+(* Helper module to create new unique transaction ids, hashes, and         *)
+(* preimages.                                                              *)
+(***************************************************************************)
+
 EXTENDS Naturals, FiniteSets
 
 VARIABLES UsedTransactionIds,

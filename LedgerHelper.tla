@@ -1,5 +1,9 @@
 ---------------------------- MODULE LedgerHelper ----------------------------
 
+(***************************************************************************)
+(* Collection of helper functions for transactions and the ledger.         *)
+(***************************************************************************)
+
 EXTENDS Naturals, FiniteSets, TLC, SumAmounts
 
 CONSTANTS

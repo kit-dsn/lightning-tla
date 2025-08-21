@@ -1,5 +1,11 @@
 --------------------------- MODULE IdealPayments ---------------------------
 
+(***************************************************************************)
+(* Specification that restricts payments between users: A payment can only *)
+(* be marked as processed at the sender of the payment if it already has   *)
+(* been marked as processed by the payment's receiver.                     *)
+(***************************************************************************)
+
 EXTENDS Integers
 VARIABLE Payments
 CONSTANTS UserIds, Numbers

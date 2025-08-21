@@ -1,5 +1,11 @@
 ------------------- MODULE PaymentChannelUserWithHistory -------------------
 
+(***************************************************************************)
+(* Helper module for the refinement mapping from specification II to       *)
+(* specification III.  Extends PaymentChannelUser with a set of auxilary   *)
+(* history variables.                                                      *)
+(***************************************************************************)
+
 EXTENDS PaymentChannelUser, Integers
 
 VARIABLES
@@ -272,5 +278,5 @@ NextHFair(ChannelID, UserID, OtherUserID) ==
     
 =============================================================================
 \* Modification History
-\* Last modified Mon Mar 31 21:17:15 CEST 2025 by matthias
+\* Last modified Thu Aug 21 17:31:48 CEST 2025 by matthias
 \* Created Fri Dec 02 13:37:10 CET 2022 by matthias

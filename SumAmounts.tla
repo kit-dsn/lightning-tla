@@ -1,5 +1,9 @@
 ----------------------------- MODULE SumAmounts -----------------------------
 
+(***************************************************************************)
+(* Helpers to calculate sums of sets and sequences.                        *)
+(***************************************************************************)
+
 EXTENDS Naturals, Sequences, FiniteSets
 
 \* From https://learntla.com/libraries/sets/

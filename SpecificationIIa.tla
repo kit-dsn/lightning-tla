@@ -1,5 +1,11 @@
 -------------------------- MODULE SpecificationIIa --------------------------
 
+(***************************************************************************)
+(* This specification restricts specification II to only a single active   *)
+(* channel.  The actions of other channels that can have an effect on the  *)
+(* specified channel are mocked by the module MultiHopMock.                *)
+(***************************************************************************)
+
 EXTENDS SpecificationII
 
 ASSUME Cardinality(ActiveChannels) = 1
@@ -13,9 +19,16 @@ CONSTANT
     
 varsIIa == <<vars, UserRequestedInvoices>>
 
+(***************************************************************************)
+(* Mock for the actions of other channels that can have an effect on this  *)
+(* channel.                                                                *)
+(***************************************************************************)
 MHM == INSTANCE MultiHopMock WITH
     UnchangedVars <- <<ChannelMessages, ChannelPendingBalance, ChannelUsedTransactionIds, ChannelUserBalance, ChannelUserDetailVars, ChannelUserInventory, ChannelUserState, LedgerTime, LedgerTx, TxAge>>
 
+(***************************************************************************)
+(* Points in time to which time adances.                                   *)
+(***************************************************************************)
 SpecIIaNCTPs == 
         UNION UNION UNION {{{PCU!TimelockRegions(c, u),
                              HU!TimelockRegions(c, u, CHOOSE o \in UsersOfChannelSet(c) : o # u),

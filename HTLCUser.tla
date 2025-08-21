@@ -1,5 +1,10 @@
 ------------------------------ MODULE HTLCUser ------------------------------
 
+(***************************************************************************)
+(* This module specifies the actions for HTLC-based payments               *)
+(* (invoice/add/fulfill/timeout).                                          *)
+(***************************************************************************)
+
 EXTENDS Integers, FiniteSets, Sequences, TLC, HTLCUserHelper, SumAmounts
 
 CONSTANTS EmptyMessage,
@@ -98,6 +103,9 @@ Init(ChannelIDs, UserIDs) ==
     /\ UserLatePreimages = [u \in UserIDs |-> {}]
     /\ UserPaymentSecretForPreimage = [u \in UserIDs |-> <<>>]
 
+(***************************************************************************)
+(* Requests an invoice from another user to whom a payment should be sent. *)
+(***************************************************************************)
 RequestInvoice(UserID) ==
     /\ Cardinality(UserNewPayments[UserID]) > 0
     /\ \E payment \in UserNewPayments[UserID] :
@@ -112,6 +120,10 @@ RequestInvoice(UserID) ==
     /\ UNCHANGED <<ChannelMessages, UserPreimageInventory, UserPaymentSecretForPreimage, UserLatePreimages, ChannelUserVars, ChannelUserBalance, ChannelPendingBalance, UserPayments, UserChannelBalance>>
     /\ UNCHANGED UnchangedVars  
     
+(***************************************************************************)
+(* Receive the request for an invoice and reply by generating and sending  *)
+(* a payment hash.                                                         *)
+(***************************************************************************)
 GenerateAndSendPaymentHash(UserID) ==
     /\ \E message \in Messages :
         /\ message.recipient = NameForUserID[UserID]
@@ -130,6 +142,10 @@ GenerateAndSendPaymentHash(UserID) ==
     /\ UNCHANGED <<ChannelMessages, UserLatePreimages, ChannelUserBalance, ChannelPendingBalance, UserNewPayments, ChannelUserVars, UserPayments, UserChannelBalance>>
     /\ UNCHANGED UnchangedVars
    
+(***************************************************************************)
+(* Receive an invoice / payment hash for a payment for which an invoice    *)
+(* was requested.                                                          *)
+(***************************************************************************)
 ReceivePaymentHash(UserID) ==
     /\ \E message \in Messages :
         /\ message.recipient = NameForUserID[UserID]
@@ -151,7 +167,10 @@ ReceivePaymentHash(UserID) ==
     /\ UNCHANGED <<ChannelMessages, UserLatePreimages, UserPaymentSecretForPreimage, UserPreimageInventory, ChannelUserBalance, ChannelPendingBalance, ChannelUserVars, UserPayments, UserChannelBalance>>
     /\ UNCHANGED UnchangedVars
     
-    
+(***************************************************************************)
+(* Add an outgoing HTLC for a payment that should be sent.  And send an    *)
+(* UpdateAddHTLC message to the other user to add the HTLC.                *)
+(***************************************************************************)
 AddAndSendOutgoingHTLC(ChannelID, UserID, OtherUserID) ==
     /\ ChannelUserState[ChannelID][UserID] \in {"rev-keys-exchanged", "closing-time-set"}
     /\ Cardinality(UserNewPayments[UserID]) > 0
@@ -192,6 +211,10 @@ AddAndSendOutgoingHTLC(ChannelID, UserID, OtherUserID) ==
     /\ UNCHANGED <<Messages, UserLatePreimages, UserPaymentSecretForPreimage, ChannelUserBalance, ChannelPendingBalance, UserPreimageInventory, UserPayments, UserChannelBalance>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Receive an UpdateAddHTLC message.  If we should forward the payment,    *)
+(* add the payment to be forwarded to the set of new payments.             *)
+(***************************************************************************)
 ReceiveUpdateAddHTLC(ChannelID, UserID, OtherUserID) ==
     /\ ChannelUserState[ChannelID][UserID] # "closed"
     /\ \E message \in MyFirstChannelMessage(ChannelID, UserID) :
@@ -227,6 +250,9 @@ ReceiveUpdateAddHTLC(ChannelID, UserID, OtherUserID) ==
     /\ UNCHANGED <<Messages, UserLatePreimages, UserPaymentSecretForPreimage, UserPreimageInventory, ChannelUserBalance, ChannelPendingBalance, UserPayments, UserChannelBalance>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Fulfill an HTLC by sending the preimage.                                *)
+(***************************************************************************)
 SendHTLCPreimage(ChannelID, UserID, OtherUserID) ==
     /\ ChannelUserState[ChannelID][UserID] \in {"rev-keys-exchanged", "closing-time-set"}
     /\ \E htlc \in {htlc \in ChannelUserVars[ChannelID][UserID].IncomingHTLCs : htlc.state = "COMMITTED"} :
@@ -249,6 +275,9 @@ SendHTLCPreimage(ChannelID, UserID, OtherUserID) ==
     /\ UNCHANGED <<Messages, UserLatePreimages, UserPaymentSecretForPreimage, UserPreimageInventory, UserNewPayments>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Receive the preimage of an HTLC.                                        *)
+(***************************************************************************)
 ReceiveHTLCPreimage(ChannelID, UserID, OtherUserID) ==
     /\ \E message \in MyFirstChannelMessage(ChannelID, UserID) :
         /\ message.recipient = NameForUserID[UserID]
@@ -273,6 +302,9 @@ ReceiveHTLCPreimage(ChannelID, UserID, OtherUserID) ==
     /\ UNCHANGED <<Messages, UserPaymentSecretForPreimage, ChannelUserBalance, ChannelPendingBalance, UserNewPayments>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Abort a committed HTLC if it cannot be fulfilled.                       *)
+(***************************************************************************)
 SendHTLCFail(ChannelID, UserID, OtherUserID) ==
     /\ ChannelUserState[ChannelID][UserID] \in {"rev-keys-exchanged", "closing-time-set"}
     /\ \E htlc \in {htlc \in ChannelUserVars[ChannelID][UserID].IncomingHTLCs : htlc.state = "COMMITTED"} :
@@ -286,6 +318,9 @@ SendHTLCFail(ChannelID, UserID, OtherUserID) ==
     /\ UNCHANGED <<Messages, UserLatePreimages, UserPaymentSecretForPreimage, UserPreimageInventory, ChannelUserBalance, ChannelPendingBalance, UserNewPayments, UserPayments, UserChannelBalance>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Receive the other user's request to abort an HTLC.                      *)
+(***************************************************************************)
 ReceiveHTLCFail(ChannelID, UserID, OtherUserID) ==
     /\ \E message \in MyFirstChannelMessage(ChannelID, UserID) :
         /\ message.recipient = NameForUserID[UserID]
@@ -296,6 +331,11 @@ ReceiveHTLCFail(ChannelID, UserID, OtherUserID) ==
     /\ UNCHANGED <<Messages, UserLatePreimages, UserPaymentSecretForPreimage, UserPreimageInventory, ChannelUserBalance, ChannelPendingBalance, UserNewPayments, UserPayments, UserChannelBalance>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Ignore a request for an invoice.                                        *)
+(*                                                                         *)
+(* This is required for liveness.                                          *)
+(***************************************************************************)
 IgnoreInvoiceRequest(ChannelID, UserID, OtherUserID) ==
     /\ FORCE_LONG_SIMULATION => TLCGet("level") > SIMULATION_MIN_LENGTH
     /\ \E message \in Messages :
@@ -317,6 +357,11 @@ Next(ChannelID, UserID, OtherUserID) ==
     \/ ReceiveHTLCFail(ChannelID, UserID, OtherUserID)
     \/ IgnoreInvoiceRequest(ChannelID, UserID, OtherUserID)
 
+(***************************************************************************)
+(* Fairness requires all users to receive messages.  Honest users are      *)
+(* required to send messages if the protocol expects them to send a        *)
+(* message.                                                                *)
+(***************************************************************************)
 NextFair(ChannelID, UserID, OtherUserID) ==
     \/ UserHonest[UserID] /\ RequestInvoice(UserID)
     \/ UserHonest[UserID] /\ GenerateAndSendPaymentHash(UserID)

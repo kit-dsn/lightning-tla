@@ -1,5 +1,10 @@
 -------------------------- MODULE SpecificationIII --------------------------
 
+(***************************************************************************)
+(* Specification of Lightning using idealized channels instead of the real *)
+(* protocol.                                                               *)
+(***************************************************************************)
+
 EXTENDS BaseSpec
 
 VARIABLES

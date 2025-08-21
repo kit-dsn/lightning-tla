@@ -1,7 +1,16 @@
 -------------------------- MODULE SpecificationIV --------------------------
 
+(***************************************************************************)
+(* Time-optimized specification of Lightning with idealized channels.      *)
+(***************************************************************************)
+
 EXTENDS SpecificationIII
 
+(***************************************************************************)
+(* Points in time to which time should advance with the time-optimization. *)
+(* Proof of correctness in the appendix of the extended version of the     *)
+(* paper.                                                                  *)
+(***************************************************************************)
 SpecIVNCTPs == UNION {AbstractChannel!TimelockRegions(c, UsersOfChannel[c][1], UsersOfChannel[c][2]) : c \in ActiveChannels}
                                 \cup UNION UNION { { HU!TimelockRegions(c, u, CHOOSE o \in UsersOfChannelSet(c) : o # u) : u \in UsersOfChannelSet(c)}
                                                     : c \in ActiveChannels}

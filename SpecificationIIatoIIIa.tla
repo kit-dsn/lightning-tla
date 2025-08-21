@@ -1,5 +1,10 @@
 ----------------------- MODULE SpecificationIIatoIIIa -----------------------
 
+(***************************************************************************)
+(* Helper specification to check the refinement mapping from specification *)
+(* IIa to specification IIIa.                                              *)
+(***************************************************************************)
+
 EXTENDS SpecificationIIa, SpecificationIItoIII
 
 varsIIatoIIIa == <<varsIItoIII, UserRequestedInvoices>>
@@ -31,6 +36,11 @@ SpecIIatoIIIa ==
     /\ [][NextIIatoIIIa]_varsIIatoIIIa
     /\ WF_vars(NextIIaFair)
 
+(***************************************************************************)
+(* The refinement mapping from Specification IIa to Specification IIIa.    *)
+(* Each variable in specification IIIa that is not listed here has the     *)
+(* same value as in specification IIa.                                     *)
+(***************************************************************************)
 SpecificationIIIa == INSTANCE SpecificationIIIa WITH
     ChannelMessages <- [c \in ActiveChannels |-> AbstractedChannelMessages(c)],
     ChannelPendingBalance <- [c \in ActiveChannels |-> AbstractedChannelPendingBalance(c, UsersOfChannel[c][1], UsersOfChannel[c][2])],

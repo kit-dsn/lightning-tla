@@ -1,5 +1,9 @@
 ---------------------------- MODULE PCAbstract ----------------------------
 
+(***************************************************************************)
+(* Abstraction of a payment channel.                                       *)
+(***************************************************************************)
+
 EXTENDS Integers, FiniteSets, TLC, Sequences, SumAmounts
 
 VARIABLES
@@ -33,6 +37,10 @@ HTLCsByStates(states, HTLCSet) == {htlc \in HTLCSet : htlc.state \in states}
 \* G is "a grace-period G blocks after HTLC timeout before giving up on an unresponsive peer and dropping to chain" (BOLT 02)
 G == 3
 
+(***************************************************************************)
+(* Points in time at which one of the user wants to perform an action at   *)
+(* the latest.                                                             *)
+(***************************************************************************)
 TimeBound(ChannelID, UserAID, UserBID, aliceHonest, bobHonest) ==
     LET timelimits == UNION
         { 
@@ -89,6 +97,10 @@ TimeBound(ChannelID, UserAID, UserBID, aliceHonest, bobHonest) ==
         }
     IN CHOOSE min \in timelimits : (\A time \in timelimits : min <= time)
     
+(***************************************************************************)
+(* Points in time that must be considered by the time-optimization.  Proof *)
+(* of correctness is in the extended version of the paper.                 *)
+(***************************************************************************)
 TimelockRegions(ChannelID, UserAID, UserBID) == 
     LET timepoints ==
         (LET HTLCs == ChannelUserVars[ChannelID][UserAID].OutgoingHTLCs \cup ChannelUserVars[ChannelID][UserBID].IncomingHTLCs \cup ChannelUserVars[ChannelID][UserAID].IncomingHTLCs \cup ChannelUserVars[ChannelID][UserBID].OutgoingHTLCs
@@ -97,6 +109,13 @@ TimelockRegions(ChannelID, UserAID, UserBID) ==
         {MAX_TIME}
     IN timepoints
 
+(***************************************************************************)
+(* Helper to validate whether a given function f maps the states of the    *)
+(* HTLCs to valid states when the channel has been closed.                 *)
+(*                                                                         *)
+(* Implements rules such as: If an HTLC has been timedout, the HTLC cannot *)
+(* be aborted or persisted anymore.                                        *)
+(***************************************************************************)
 ValidMapping(f, htlc, ledgerTime, HTLCData, aliceHTLCs, bobHTLCs, aliceVars, bobVars, aliceHasCheated, bobHasCheated, aliceIsNegligent, bobIsNegligent, ChannelID, UserAID, UserBID) ==
     /\ htlc.state = "FULFILLED" =>
             \/ f[htlc] \in {"PERSISTED", "PUNISHED"}
@@ -130,6 +149,10 @@ ValidMapping(f, htlc, ledgerTime, HTLCData, aliceHTLCs, bobHTLCs, aliceVars, bob
             \/  /\ htlc \in aliceVars.OutgoingHTLCs => htlc.hash \in UserPreimageInventory[UserAID] \ UserLatePreimages[UserAID] \/ aliceHasCheated \/ aliceIsNegligent
                 /\ htlc \in bobVars.OutgoingHTLCs => htlc.hash \in UserPreimageInventory[UserBID] \ UserLatePreimages[UserBID] \/ bobHasCheated \/ bobIsNegligent
 
+(***************************************************************************)
+(* Helper defining a set of all valid mappings of the current HTLC states  *)
+(* to HTLC states after closing the channel.                               *)
+(***************************************************************************)
 HTLCToClosedStateMappings(aliceHasCheated, bobHasCheated, ledgerTime, aliceVars, bobVars, aliceIsNegligent, bobIsNegligent, ChannelID, UserAID, UserBID) ==
     LET HTLCData == aliceVars.IncomingHTLCs \cup bobVars.IncomingHTLCs \cup aliceVars.OutgoingHTLCs \cup bobVars.OutgoingHTLCs
         aliceHTLCs == aliceVars.IncomingHTLCs \cup aliceVars.OutgoingHTLCs
@@ -145,7 +168,10 @@ HTLCToClosedStateMappings(aliceHasCheated, bobHasCheated, ledgerTime, aliceVars,
 
 AllHTLCs(ChannelID, UserAID, UserBID) == ChannelUserVars[ChannelID][UserAID].IncomingHTLCs \cup ChannelUserVars[ChannelID][UserBID].IncomingHTLCs \cup ChannelUserVars[ChannelID][UserAID].OutgoingHTLCs \cup ChannelUserVars[ChannelID][UserBID].OutgoingHTLCs
 
-\* UserA is funder of channel
+(***************************************************************************)
+(* Open a payment channel between the two users.  UserA is the funder of   *)
+(* the channel.                                                            *)
+(***************************************************************************)
 OpenPaymentChannel(ChannelID, UserAID, UserBID) ==
     /\ ChannelUserState[ChannelID][UserAID] = "init"
     /\ ChannelUserState[ChannelID][UserBID] = "init"
@@ -174,7 +200,12 @@ RemovableHTLCsDuringUpdate(ledgerTime, ChannelID, UserAID, UserBID) ==
             HTLCsAreEqual(htlcData, htlc) => ~htlc.fulfilled \/ htlc.hash \notin ChannelUserVars[ChannelID][UserAID].OnChainHTLCs
     }
     
-    
+(***************************************************************************)
+(* Update the payment channel by committing a new HTLC or removing a       *)
+(* fulfilled or timedout HTLC.                                             *)
+(*                                                                         *)
+(* Allows closing the channel in the same step.                            *)
+(***************************************************************************)
 UpdatePaymentChannelP(ledgerTime, ChannelID, UserAID, UserBID) ==
     /\ ChannelUserState[ChannelID][UserAID] \in {"rev-keys-exchanged", "closing-time-set"}
     /\ ChannelUserState[ChannelID][UserBID] \in {"rev-keys-exchanged", "closing-time-set"}
@@ -302,6 +333,11 @@ UpdatePaymentChannelP(ledgerTime, ChannelID, UserAID, UserBID) ==
 UpdatePaymentChannel(ChannelID, UserAID, UserBID) ==
     UpdatePaymentChannelP(LedgerTime, ChannelID, UserAID, UserBID)
     
+(***************************************************************************)
+(* Action to model that a commitment transaction was published.  Here this *)
+(* sets the set of HTLCs that are on-chain and whether one of the users    *)
+(* has cheated by publishing the commitment transaction.                   *)
+(***************************************************************************)
 SetOnChainHTLCsAndCheater(ChannelID, UserAID, UserBID) ==
     /\ ChannelUserState[ChannelID][UserAID] = "rev-keys-exchanged"
     /\ ChannelUserState[ChannelID][UserBID] = "rev-keys-exchanged"
@@ -358,6 +394,9 @@ SetOnChainHTLCsAndCheater(ChannelID, UserAID, UserBID) ==
     /\ UNCHANGED <<UserHonest, ChannelUserBalance, UserExtBalance, UserPreimageInventory, ChannelPendingBalance, UserLatePreimages, UserChannelBalance, UserPayments>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Helper defining mappings for possible new states of HTLCs.              *)
+(***************************************************************************)
 HTLCToOnChainCommittedStateMappings(newHTLCs, onChainCommittedHTLCs, ChannelID, UserAID, UserBID) ==
     LET aliceHTLCs == ChannelUserVars[ChannelID][UserAID].IncomingHTLCs \cup ChannelUserVars[ChannelID][UserAID].OutgoingHTLCs
         bobHTLCs == ChannelUserVars[ChannelID][UserBID].IncomingHTLCs \cup ChannelUserVars[ChannelID][UserBID].OutgoingHTLCs
@@ -376,7 +415,9 @@ HTLCToOnChainCommittedStateMappings(newHTLCs, onChainCommittedHTLCs, ChannelID, 
             /\ (htlc \in bobHTLCs /\ ~\E aliceHtlc \in aliceHTLCs : aliceHtlc.hash = htlc.hash) => f[htlc] = "ABORTED"
     }
     
-
+(***************************************************************************)
+(* Action to fulfill incoming HTLCs on-chain.                              *)
+(***************************************************************************)
 FulfillIncomingHTLCsOnChain(ChannelID, UserAID, UserBID) ==
     /\ ChannelUserState[ChannelID][UserAID] \in {"closing-time-set", "closing"}
     /\ ChannelUserState[ChannelID][UserBID] \in {"closing-time-set", "closing"}
@@ -451,6 +492,10 @@ FulfillIncomingHTLCsOnChain(ChannelID, UserAID, UserBID) ==
     /\ UNCHANGED <<UserHonest, UserExtBalance, UserPreimageInventory, UserLatePreimages>>
     /\ UNCHANGED UnchangedVars
 
+(***************************************************************************)
+(* Action to note that incoming HTLCs have been fulfilled on-chain.  The   *)
+(* preimages are added to the non-fulfilling user's inventory.             *)
+(***************************************************************************)
 NoteFulfilledHTLCsOnChain(ChannelID, UserAID, UserBID) ==
     /\ ChannelUserState[ChannelID][UserAID] \in {"closing-time-set", "closing"}
     /\ ChannelUserState[ChannelID][UserBID] \in {"closing-time-set", "closing"}
@@ -509,6 +554,10 @@ NoteFulfilledHTLCsOnChain(ChannelID, UserAID, UserBID) ==
     /\ UNCHANGED <<UserHonest, UserExtBalance>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Commit a set of HTLCs on-chain.  These HTLCs must be on-chain fulfilled *)
+(* or timedout.                                                            *)
+(***************************************************************************)
 CommitHTLCsOnChain(ChannelID, UserAID, UserBID) ==
     /\ ChannelUserState[ChannelID][UserAID] = "closing-time-set"
     /\ ChannelUserState[ChannelID][UserBID] = "closing-time-set"
@@ -638,6 +687,9 @@ HTLCsToPossiblyFulfillOnChain(ledgerTime, ChannelID, UserAID, UserBID) ==
     }
     
     
+(***************************************************************************)
+(* Fulfill an HTLC on-chain that was on-chain committed.                   *)
+(***************************************************************************)
 FulfillHTLCsOnChainP(ledgerTime, ChannelID, UserAID, UserBID) ==
     /\ ChannelUserState[ChannelID][UserAID] \in {"closing-time-set", "closing"}
     /\ ChannelUserState[ChannelID][UserBID] \in {"closing-time-set", "closing"}
@@ -694,6 +746,10 @@ FulfillHTLCsOnChainP(ledgerTime, ChannelID, UserAID, UserBID) ==
 FulfillHTLCsOnChain(ChannelID, UserAID, UserBID) ==
     FulfillHTLCsOnChainP(LedgerTime, ChannelID, UserAID, UserBID)
 
+(***************************************************************************)
+(* Close the payment channel and set all HTLCs to their respective closed  *)
+(* state.                                                                  *)
+(***************************************************************************)
 ClosePaymentChannelWithTime(ledgerTime, ChannelID, UserAID, UserBID) ==
     /\  \/  /\ ChannelUserState[ChannelID][UserAID] = "closing"
             /\ ChannelUserState[ChannelID][UserBID] = "closing"

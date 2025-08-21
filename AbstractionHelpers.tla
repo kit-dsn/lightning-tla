@@ -1,5 +1,10 @@
 ------------------------- MODULE AbstractionHelpers -------------------------
 
+(***************************************************************************)
+(* Collection of helper functions for the refinement mapping from          *)
+(* specification II to specification III.                                  *)
+(***************************************************************************)
+
 EXTENDS Integers, Naturals, FiniteSets, Sequences, SumAmounts, TLC
 
 CONSTANTS AllSigHashLock, SingleSigHashLock

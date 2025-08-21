@@ -1,12 +1,21 @@
 -------------------------- MODULE SpecificationII --------------------------
 
+(***************************************************************************)
+(* This specification extends specification I and changes how time is      *)
+(* advanced: By skipping points in time that are equivalent to other       *)
+(* points in time, the state space is reduced.                             *)
+(***************************************************************************)
+
 EXTENDS SpecificationI
 
+(***************************************************************************)
+(* Points in time to which time should advance.  Correct construction of   *)
+(* this set is proven in the paper.                                        *)
+(***************************************************************************)
 SpecIINCTPs == 
         UNION UNION UNION {{{PCU!TimelockRegions(c, u),
                              HU!TimelockRegions(c, u, CHOOSE o \in UsersOfChannelSet(c) : o # u)} :
                                         u \in UsersOfChannelSet(c)} : c \in ChannelIDs}
-                                        
 relETP == SpecIINCTPs \cup {t + 1 : t \in TimeBounds}
 
 LedgerTimeInstanceII == INSTANCE LedgerTime WITH

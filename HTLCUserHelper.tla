@@ -1,5 +1,9 @@
 --------------------------- MODULE HTLCUserHelper ---------------------------
 
+(***************************************************************************)
+(* Collection of helper functions required by the HTLCUser module.         *)
+(***************************************************************************)
+
 EXTENDS Integers, Sequences
 
 \* G is "a grace-period G blocks after HTLC timeout before giving up on an unresponsive peer and dropping to chain" (BOLT 02)

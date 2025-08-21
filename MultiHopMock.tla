@@ -1,8 +1,10 @@
 ---------------------------- MODULE MultiHopMock ----------------------------
 
-(*
-    A MultiHopMock mocks the whole environment of one channel for one particular user and channel.
-*)
+(***************************************************************************)
+(* Module that mocks the whole environment of one channel for one          *)
+(* particular user and channel.  Required for the specifications of a      *)
+(* single channel (IIa and IIIa).                                          *)
+(***************************************************************************)
 
 EXTENDS Sequences, Naturals, TLC, FiniteSets, HTLCUserHelper
 

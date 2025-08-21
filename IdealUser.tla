@@ -1,4 +1,10 @@
 ----------------------------- MODULE IdealUser -----------------------------
+
+(***************************************************************************)
+(* Specification of actions that change a user's state.  Does not depend   *)
+(* on other user's.                                                        *)
+(***************************************************************************)
+
 EXTENDS Integers, SumAmounts
 VARIABLES BlockchainBalance, ChannelBalance,
     Payments, Honest

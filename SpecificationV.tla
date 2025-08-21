@@ -1,9 +1,17 @@
 --------------------------- MODULE SpecificationV ---------------------------
 
+(***************************************************************************)
+(* Variables for the external balance on the blockchain, internal balance, *)
+(* set of payments, and whether a user is honest.  Each variable is a      *)
+(* function that contains a variable for each id in UserIds.               *)
+(***************************************************************************)
 VARIABLES BlockchainBalances, ChannelBalances,
     Payments, Honest
 CONSTANTS UserIds, InitialPayments, Numbers
-    
+
+(***************************************************************************)
+(* Specification of an ideal user.                                         *)
+(***************************************************************************)
 IdealUser(user) == INSTANCE IdealUser WITH
     UserId <- user,
     ChannelBalance <- ChannelBalances[user],
@@ -11,6 +19,9 @@ IdealUser(user) == INSTANCE IdealUser WITH
     Payments <- Payments[user],
     Honest <- Honest[user]
     
+(***************************************************************************)
+(* Specification of correct payments between users.                        *)
+(***************************************************************************)
 IdealPayments == INSTANCE IdealPayments
     
 Spec ==

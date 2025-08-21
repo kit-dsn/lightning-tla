@@ -1,5 +1,9 @@
 ------------------------------ MODULE BaseSpec ------------------------------
 
+(***************************************************************************)
+(* Base variables, constants, and definitions for each specification.      *)
+(***************************************************************************)
+
 EXTENDS Integers, Sequences, TLC
 
 VARIABLES

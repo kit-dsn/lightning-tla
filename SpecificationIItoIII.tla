@@ -1,5 +1,12 @@
 ------------------------ MODULE SpecificationIItoIII ------------------------
 
+(***************************************************************************)
+(* Helper specification to check the refinement mapping from specification *)
+(* II to specification III.  The specification contains the definition of  *)
+(* the refinement mapping (using definitions from the AbstractionHelpers   *)
+(* module).                                                                *)
+(***************************************************************************)
+
 EXTENDS SpecificationII
 
 VARIABLES
@@ -21,6 +28,9 @@ GetCheater(ChannelID, UserID, OtherUserID) ==
     THEN NameForUserID[OtherUserID]
     ELSE NullUser
 
+(***************************************************************************)
+(* Abstraction of a user's state of the channel.                           *)
+(***************************************************************************)
 AbstractedChannelUserState(ChannelID, UserID, OtherUserID) ==
     IF IsOpeningState(LedgerTx, ChannelUserState[ChannelID][UserID], ChannelUserState[ChannelID][OtherUserID], ChannelUserVars[ChannelID][UserID], ChannelUserVars[ChannelID][OtherUserID], ChannelUserDetailVars[ChannelID][UserID], ChannelUserDetailVars[ChannelID][OtherUserID], ChannelUserHTLCHistory[ChannelID][UserID], ChannelUserHTLCHistory[ChannelID][OtherUserID])
     THEN "init"
@@ -33,6 +43,9 @@ AbstractedChannelUserState(ChannelID, UserID, OtherUserID) ==
     ELSE IF IsClosingStateAfterCommit(ChannelUserState[ChannelID][UserID], ChannelUserState[ChannelID][OtherUserID], ChannelUserVars[ChannelID][UserID], ChannelUserVars[ChannelID][OtherUserID], ChannelUserDetailVars[ChannelID][UserID], ChannelUserDetailVars[ChannelID][OtherUserID], ChannelUserHTLCHistory[ChannelID][UserID], ChannelUserHTLCHistory[ChannelID][OtherUserID], LedgerTx) \/ IsClosingStateAfterFulfill(LedgerTx, ChannelUserState[ChannelID][UserID], ChannelUserState[ChannelID][OtherUserID], ChannelUserVars[ChannelID][UserID], ChannelUserVars[ChannelID][OtherUserID], ChannelUserDetailVars[ChannelID][UserID], ChannelUserDetailVars[ChannelID][OtherUserID], ChannelUserHTLCHistory[ChannelID][UserID], ChannelUserHTLCHistory[ChannelID][OtherUserID])
     THEN "closing"
     ELSE ChannelUserState[ChannelID][UserID]
+(***************************************************************************)
+(* Abstraction of a user's channel vars.                                   *)
+(***************************************************************************)
 AbstractedChannelUserVars(ChannelID, UserID, OtherUserID) ==
     IF IsUpdatingState(LedgerTx, ChannelUserState[ChannelID][UserID], ChannelUserState[ChannelID][OtherUserID], ChannelUserVars[ChannelID][UserID], ChannelUserVars[ChannelID][OtherUserID], ChannelUserDetailVars[ChannelID][UserID], ChannelUserDetailVars[ChannelID][OtherUserID], ChannelUserHTLCHistory[ChannelID][UserID], ChannelUserHTLCHistory[ChannelID][OtherUserID]) \/ IsClosingStateAfterCommit(ChannelUserState[ChannelID][UserID], ChannelUserState[ChannelID][OtherUserID], ChannelUserVars[ChannelID][UserID], ChannelUserVars[ChannelID][OtherUserID], ChannelUserDetailVars[ChannelID][UserID], ChannelUserDetailVars[ChannelID][OtherUserID], ChannelUserHTLCHistory[ChannelID][UserID], ChannelUserHTLCHistory[ChannelID][OtherUserID], LedgerTx) \/ IsClosingStateAfterFulfill(LedgerTx, ChannelUserState[ChannelID][UserID], ChannelUserState[ChannelID][OtherUserID], ChannelUserVars[ChannelID][UserID], ChannelUserVars[ChannelID][OtherUserID], ChannelUserDetailVars[ChannelID][UserID], ChannelUserDetailVars[ChannelID][OtherUserID], ChannelUserHTLCHistory[ChannelID][UserID], ChannelUserHTLCHistory[ChannelID][OtherUserID]) \/ IsPreClosingState(LedgerTx, ChannelUserState[ChannelID][UserID], ChannelUserState[ChannelID][OtherUserID], ChannelUserVars[ChannelID][UserID], ChannelUserVars[ChannelID][OtherUserID], ChannelUserDetailVars[ChannelID][UserID], ChannelUserDetailVars[ChannelID][OtherUserID], ChannelUserHTLCHistory[ChannelID][UserID], ChannelUserHTLCHistory[ChannelID][OtherUserID])
     THEN [ChannelUserVars[ChannelID][UserID] EXCEPT !.IncomingHTLCs = RefinementMappingForHTLCs(@, NameForUserID[UserID], NameForUserID[OtherUserID], UserPreimageInventory[UserID], UserPayments[UserID], ChannelUserVars[ChannelID][UserID], ChannelUserDetailVars[ChannelID][UserID], ChannelUserDetailVars[ChannelID][OtherUserID], ChannelUserVars[ChannelID][OtherUserID], ChannelUserState[ChannelID][UserID], ChannelUserState[ChannelID][OtherUserID], ChannelUserHTLCHistory[ChannelID][UserID], ChannelUserHTLCHistory[ChannelID][OtherUserID], ChannelMessages[ChannelID], LedgerTx, ChannelUserDetailVars[ChannelID][UserID], ChannelUserInventory[ChannelID][UserID], ChannelUserInventory[ChannelID][OtherUserID], NameForUserID[UserID], NameForUserID[OtherUserID], AllSignatures),
@@ -89,6 +102,9 @@ AbstractedChannelUserVars(ChannelID, UserID, OtherUserID) ==
                                                                     \cup ({htlc.hash : htlc \in {htlc \in ChannelUserHTLCHistory[ChannelID][UserID].IncomingHTLCs \cup ChannelUserHTLCHistory[ChannelID][UserID].OutgoingHTLCs : htlc.reason \in {"OFF-CHAIN-TIMEDOUT"} /\ ~htlc.afterClosingTimeSet}}
                                                                             \cap {htlc.hash : htlc \in {htlc \in ChannelUserHTLCHistory[ChannelID][OtherUserID].IncomingHTLCs \cup ChannelUserHTLCHistory[ChannelID][OtherUserID].OutgoingHTLCs : htlc.reason \in {"OFF-CHAIN-TIMEDOUT"} /\ ~htlc.afterClosingTimeSet}})
                 ]
+(***************************************************************************)
+(* Abstraction of a user's balance.                                        *)
+(***************************************************************************)
 AbstractedChannelUserBalance(ChannelID, UserID, OtherUserID) ==
     IF  /\ LedgerTime = 100
         /\  \/ ChannelUserState[ChannelID][UserID] \in {"closing", "closed"}
@@ -118,6 +134,9 @@ AbstractedChannelUserBalance(ChannelID, UserID, OtherUserID) ==
         + Ledger!SumAmounts({htlc \in ChannelUserVars[ChannelID][UserID].OutgoingHTLCs : \/ htlc.state \in {"SENT-COMMIT", "PENDING-COMMIT"}
                                                                                          \/ htlc.state \in {"RECV-COMMIT", "COMMITTED"} /\ \E oHtlc \in ChannelUserVars[ChannelID][OtherUserID].IncomingHTLCs : htlc.hash = oHtlc.hash /\ oHtlc.state \in {"SENT-COMMIT", "PENDING-COMMIT"}})
     ELSE ChannelUserBalance[ChannelID][UserID]
+(***************************************************************************)
+(* Abstraction of the pending balance in the channel.                      *)
+(***************************************************************************)
 AbstractedChannelPendingBalance(ChannelID, UserID, OtherUserID) ==
     AbstractedPendingBalanceHelper(ChannelPendingBalance[ChannelID],
                             ChannelUserVars[ChannelID][UserID], ChannelUserVars[ChannelID][OtherUserID],
@@ -129,6 +148,13 @@ AbstractedChannelPendingBalance(ChannelID, UserID, OtherUserID) ==
                             UserPreimageInventory[UserID], UserPreimageInventory[OtherUserID],
                             NameForUserID[UserID], NameForUserID[OtherUserID],
                             ChannelMessages[ChannelID])
+(***************************************************************************)
+(* Abstraction of the messages in the channel.                             *)
+(*                                                                         *)
+(* The abstraction removes all messages that are related to the specific   *)
+(* implementation, i.e.  that originate from the module                    *)
+(* PaymentChannelUser.                                                     *)
+(***************************************************************************)
 AbstractedChannelMessages(ChannelID) ==
     AbstractedMessagesHelper(ChannelMessages[ChannelID])
 
@@ -141,6 +167,10 @@ SpecificationIII == INSTANCE SpecificationIII WITH
 
 -----------------------------------------------------------------------------
 
+(***************************************************************************)
+(* To simplify the abstraction, we extend the module PaymentChannelUser by *)
+(* some auxiliary (history) variables.                                     *)
+(***************************************************************************)
 PCUwH(CID) == INSTANCE PaymentChannelUserWithHistory WITH
             UnchangedVars <- <<Messages, LedgerTime, UserNewPayments, UserPaymentSecretForPreimage>>,
             AvailableTransactionIds <- [c \in ChannelIDs |-> (100*c+30)..(100*c+69)],

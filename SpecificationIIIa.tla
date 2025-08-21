@@ -1,5 +1,10 @@
 ------------------------- MODULE SpecificationIIIa -------------------------
 
+(***************************************************************************)
+(* Specification of a single channel using the channel idealization        *)
+(* instead of the real protocol.                                           *)
+(***************************************************************************)
+
 EXTENDS SpecificationIII, FiniteSets
 
 ASSUME Cardinality(ActiveChannels) = 1

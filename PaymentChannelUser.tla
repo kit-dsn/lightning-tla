@@ -1,5 +1,10 @@
 ------------------------- MODULE PaymentChannelUser -------------------------
 
+(***************************************************************************)
+(* Module with actions for the channel lifecycle (open, update, close,     *)
+(* cheat, punish, ...)                                                     *)
+(***************************************************************************)
+
 EXTENDS Integers, FiniteSets,
             TLC,
             SumAmounts,
@@ -99,7 +104,10 @@ Mapping of HTLC states from https://github.com/ElementsProject/lightning/blob/ma
     RCVD_REMOVE_ACK_COMMIT,     -> RECV-REMOVE
     SENT_REMOVE_ACK_REVOCATION, -> PERSISTED / TIMEDOUT
 *)
-  
+
+(***************************************************************************)
+(* Points in time at which we want to take a step at the latest.           *)
+(***************************************************************************)
 TimeBounds(ChannelID, UserID) ==
     LET timelimits ==
         {
@@ -154,6 +162,10 @@ TimeBounds(ChannelID, UserID) ==
         THEN timelimits
         ELSE {MAX_TIME}
         
+(***************************************************************************)
+(* Points in time at which we want to spend a published transaction at the *)
+(* latest.                                                                 *)
+(***************************************************************************)
 TxTimeBounds(ChannelID, UserID) ==
     [ id \in {tx.id : tx \in LedgerTx} |->
         IF  /\ ~ChannelUserVars[ChannelID][UserID].HaveCheated
@@ -164,6 +176,11 @@ TxTimeBounds(ChannelID, UserID) ==
         ELSE MAX_TIME
     ]
     
+(***************************************************************************)
+(* Points in time that must be considered by the time-optimized            *)
+(* specification.  Correctness proof can be found in the extended version  *)
+(* of the paper.                                                           *)
+(***************************************************************************)
 TimelockRegions(ChannelID, UserID) ==
     LET timepoints ==
         (LET HTLCs == {htlc \in (ChannelUserVars[ChannelID][UserID].IncomingHTLCs \cup ChannelUserVars[ChannelID][UserID].OutgoingHTLCs) : htlc.state \in {"NEW", "RECV-COMMIT", "PENDING-COMMIT", "SENT-COMMIT", "COMMITTED"} }
@@ -177,10 +194,17 @@ TimelockRegions(ChannelID, UserID) ==
         UNION UNION { { { condition.absTimelock : condition \in output.conditions} : output \in tx.outputs} : tx \in ChannelUserInventory[ChannelID][UserID].transactions}
     IN timepoints
 
+(***************************************************************************)
+(* Helper to send a message to the other user in the channel.              *)
+(***************************************************************************)
 SendMessageM(messages, message, messagesVar, channelID, myName, otherState) ==
     /\ messagesVar' = [messagesVar EXCEPT ![channelID] = Append(messages, [message EXCEPT !.sender = myName])]
     /\ otherState # "closed"
 
+(***************************************************************************)
+(* Initiate a channel by sending an OpenChannel message to the other user. *)
+(* The message specifies the capacity of the new channel.                  *)
+(***************************************************************************)
 SendOpenChannel(ChannelID, UserID, OtherUserID) ==
     /\ UserID = UsersOfChannel[ChannelID][1]
     /\ ChannelUserState[ChannelID][UserID] = "init"
@@ -195,6 +219,9 @@ SendOpenChannel(ChannelID, UserID, OtherUserID) ==
     /\ UNCHANGED <<ChannelUserVars, ChannelUserInventory, UserPreimageInventory, UserLatePreimages, ChannelUserBalance, UserExtBalance, LedgerTx, TxAge, ChannelUsedTransactionIds, ChannelPendingBalance, UserHonest, UserChannelBalance, UserPayments>>
     /\ UNCHANGED UnchangedVars
 
+(***************************************************************************)
+(* Receive an OpenChannel message and reply with an AcceptChannel message. *)
+(***************************************************************************)
 SendAcceptChannel(ChannelID, UserID, OtherUserID) ==
     /\ ChannelUserState[ChannelID][UserID] = "init"
     /\ ChannelUserState' = [ChannelUserState EXCEPT ![ChannelID][UserID] = "open-sent-accept-channel"]
@@ -212,6 +239,10 @@ SendAcceptChannel(ChannelID, UserID, OtherUserID) ==
     /\ UNCHANGED <<ChannelUserInventory, UserPreimageInventory, UserLatePreimages, ChannelUserVars, ChannelUserBalance, UserExtBalance, LedgerTx, TxAge, ChannelUsedTransactionIds, ChannelPendingBalance, UserHonest, UserChannelBalance, UserPayments>>
     /\ UNCHANGED UnchangedVars
 
+(***************************************************************************)
+(* Receive an AcceptChannel message and create the funding transaction for *)
+(* the new channel.                                                        *)
+(***************************************************************************)
 CreateFundingTransaction(ChannelID, UserID) ==
     /\ ChannelUserState[ChannelID][UserID] = "open-sent-open-channel"
     /\ ChannelUserState' = [ChannelUserState EXCEPT ![ChannelID][UserID] = "open-funding-created"]
@@ -233,7 +264,8 @@ CreateFundingTransaction(ChannelID, UserID) ==
                                   ]},
                       absTimelock |-> 0
                      ]
-                 IN /\ ChannelUserInventory' = [ChannelUserInventory EXCEPT ![ChannelID][UserID].transactions = @ \cup {fundingTransaction}]
+                 IN \* Store the transaction in our own inventory
+                    /\ ChannelUserInventory' = [ChannelUserInventory EXCEPT ![ChannelID][UserID].transactions = @ \cup {fundingTransaction}]
                     /\ ChannelUserDetailVars' = [ChannelUserDetailVars EXCEPT ![ChannelID][UserID].OtherKey = message.data.key,
                                                         ![ChannelID][UserID].OtherRKey = message.data.rKey,
                                                         ![ChannelID][UserID].fundingTxId = fundingTransaction.id]
@@ -241,6 +273,10 @@ CreateFundingTransaction(ChannelID, UserID) ==
     /\ UNCHANGED <<ChannelUserVars, UserPreimageInventory, UserLatePreimages, ChannelUserBalance, UserExtBalance, LedgerTx, TxAge, ChannelPendingBalance, UserHonest, UserChannelBalance, UserPayments>>
     /\ UNCHANGED UnchangedVars
                  
+(***************************************************************************)
+(* Create the first commit transaction, sign the transaction, and send it  *)
+(* to the other user in a FundingCreated message.                          *)
+(***************************************************************************)
 SendSignedFirstCommitTransaction(ChannelID, UserID, OtherUserID) ==
    /\ ChannelUserState[ChannelID][UserID] = "open-funding-created"
    /\ ChannelUserState' = [ChannelUserState EXCEPT ![ChannelID][UserID] = "open-sent-commit-funder"]
@@ -271,7 +307,12 @@ SendSignedFirstCommitTransaction(ChannelID, UserID, OtherUserID) ==
                /\ ChannelUserDetailVars' = [ChannelUserDetailVars EXCEPT ![ChannelID][UserID].CurrentOtherCommitTX = firstCommit]
     /\ UNCHANGED <<ChannelUserVars, ChannelUserInventory, UserPreimageInventory, UserLatePreimages, ChannelUserBalance, UserExtBalance, LedgerTx, TxAge, ChannelPendingBalance, UserHonest, UserChannelBalance, UserPayments>>
     /\ UNCHANGED UnchangedVars
-                                                  
+                             
+(***************************************************************************)
+(* Receive a FundingCreated message, create and sign the respective first  *)
+(* commitment transaction, and send it to the other user in the            *)
+(* FundingSigned message.                                                  *)
+(***************************************************************************)                     
 ReplyWithFirstCommitTransaction(ChannelID, UserID, OtherUserID) ==
     /\ ChannelUserState[ChannelID][UserID] = "open-sent-accept-channel"
     /\ ChannelUserState' = [ChannelUserState EXCEPT ![ChannelID][UserID] = "open-sent-commit"]
@@ -330,6 +371,10 @@ ReplyWithFirstCommitTransaction(ChannelID, UserID, OtherUserID) ==
     /\ UNCHANGED <<ChannelUserVars, UserPreimageInventory, UserLatePreimages, LedgerTx, TxAge, ChannelUserBalance, UserExtBalance, ChannelPendingBalance, UserHonest, UserChannelBalance, UserPayments>>
     /\ UNCHANGED UnchangedVars
 
+(***************************************************************************)
+(* Receive a FundingSigned message and store the signed commitment         *)
+(* transaction in our inventory.                                           *)
+(***************************************************************************)
 ReceiveCommitTransaction(ChannelID, UserID) ==
     /\ ChannelUserState[ChannelID][UserID] = "open-sent-commit-funder"
     /\ ChannelUserState' = [ChannelUserState EXCEPT ![ChannelID][UserID] = "open-recv-commit"]
@@ -361,6 +406,9 @@ ReceiveCommitTransaction(ChannelID, UserID) ==
     /\ UNCHANGED <<ChannelUserVars, UserPreimageInventory, UserLatePreimages, ChannelUserBalance, UserExtBalance, LedgerTx, TxAge, ChannelUsedTransactionIds, ChannelPendingBalance, UserHonest, UserChannelBalance, UserPayments>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Publish the funding transaction.                                        *)
+(***************************************************************************)
 PublishFundingTransaction(ChannelID, UserID) ==
     /\ ChannelUserState[ChannelID][UserID] = "open-recv-commit"
     /\ ChannelUserState' = [ChannelUserState EXCEPT ![ChannelID][UserID] = "open-funding-pub"]
@@ -375,14 +423,17 @@ PublishFundingTransaction(ChannelID, UserID) ==
     /\ UNCHANGED <<ChannelMessages, ChannelUserVars, ChannelUserDetailVars, UserPreimageInventory, UserLatePreimages, ChannelUsedTransactionIds, ChannelPendingBalance, UserHonest, UserPayments>>
     /\ UNCHANGED UnchangedVars
           
+(***************************************************************************)
+(* Note that the other user has published the funding transaction.         *)
+(***************************************************************************)
 NoteThatFundingTransactionPublished(ChannelID, UserID, OtherUserID) ==
     /\ ChannelUserState[ChannelID][UserID] = "open-sent-commit"
     /\ ChannelUserState' = [ChannelUserState EXCEPT ![ChannelID][UserID] = "open-funding-pub"]
-    (***********************************************************************
-    This verifies that the funding transaction has been published on the blockchain.
-    See CVE-2019-12998 / CVE-2019-12999 / CVE-2019-13000 and
-    https://lists.linuxfoundation.org/pipermail/lightning-dev/2019-September/002174.html
-     ***********************************************************************)
+    (***********************************************************************)
+    (*     This verifies that the funding transaction has been published on the blockchain. *)
+    (*     See CVE-2019-12998 / CVE-2019-12999 / CVE-2019-13000 and        *)
+    (*     https://lists.linuxfoundation.org/pipermail/lightning-dev/2019-September/002174.html *)
+    (***********************************************************************)
     /\ \E tx \in LedgerTx :
         /\ tx.id = ChannelUserDetailVars[ChannelID][UserID].fundingTxId
         \* Verify that the funding transaction uses the correct capacity:
@@ -394,6 +445,10 @@ NoteThatFundingTransactionPublished(ChannelID, UserID, OtherUserID) ==
     /\ UNCHANGED <<UserExtBalance, ChannelMessages, ChannelUserVars, ChannelUserDetailVars, ChannelUserInventory, UserPreimageInventory, UserLatePreimages, LedgerTx, TxAge, ChannelUsedTransactionIds, ChannelPendingBalance, UserHonest, UserChannelBalance, UserPayments>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Send the ChannelReady message to the other user with a new public       *)
+(* revocation key.                                                         *)
+(***************************************************************************)
 SendNewRevocationKey(ChannelID, UserID, OtherUserID) ==
     /\ \/ ChannelUserState[ChannelID][UserID] = "open-funding-pub" /\ ChannelUserState' = [ChannelUserState EXCEPT ![ChannelID][UserID] = "open-new-key-sent"]
        \/ ChannelUserState[ChannelID][UserID] = "open-new-key-received" /\ ChannelUserState' = [ChannelUserState EXCEPT ![ChannelID][UserID] = "rev-keys-exchanged"]
@@ -407,6 +462,10 @@ SendNewRevocationKey(ChannelID, UserID, OtherUserID) ==
     /\ UNCHANGED <<ChannelUserBalance, UserExtBalance, ChannelUserVars, UserPreimageInventory, UserLatePreimages, LedgerTx, TxAge, ChannelUsedTransactionIds, ChannelPendingBalance, UserHonest, UserChannelBalance, UserPayments>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Receive the ChannelReady message and store the received revocation      *)
+(* public key.                                                             *)
+(***************************************************************************)
 ReceiveNewRevocationKey(ChannelID, UserID, OtherUserID) ==
     /\ \/ ChannelUserState[ChannelID][UserID] = "open-funding-pub" /\ ChannelUserState' = [ChannelUserState EXCEPT ![ChannelID][UserID] = "open-new-key-received"]
        \/ ChannelUserState[ChannelID][UserID] = "open-new-key-sent" /\ ChannelUserState' = [ChannelUserState EXCEPT ![ChannelID][UserID] = "rev-keys-exchanged"]
@@ -420,6 +479,10 @@ ReceiveNewRevocationKey(ChannelID, UserID, OtherUserID) ==
     /\ UNCHANGED <<ChannelUserVars, ChannelUserBalance, UserExtBalance, ChannelPendingBalance, ChannelUserInventory, LedgerTx, TxAge, ChannelUsedTransactionIds, UserPreimageInventory, UserLatePreimages, UserHonest, UserChannelBalance, UserPayments>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Helper to create the second-level HTLC transactions for a commitment    *)
+(* transaction.                                                            *)
+(***************************************************************************)
 CreateHTLCTransactions(commitmentTransaction, newHTLCs, oldHTLCs, ChannelID, UserID) ==
     LET HTLCs == (newHTLCs \cup HTLCsByStates({"COMMITTED", "FULFILLED"}, ChannelUserVars[ChannelID][UserID]) \cup OutHTLCsByStates({"PENDING-COMMIT", "RECV-COMMIT", "PENDING-REMOVE", "RECV-REMOVE"}, ChannelUserVars[ChannelID][UserID])) \ oldHTLCs
         NewTransactionIds == TIO!GetNewTransactionIds(Cardinality(HTLCs), {commitmentTransaction.id}, ChannelID)
@@ -452,6 +515,11 @@ CreateHTLCTransactions(commitmentTransaction, newHTLCs, oldHTLCs, ChannelID, Use
           ]
         : htlc \in HTLCs}
     
+(***************************************************************************)
+(* Create a new commitment transaction with additional HTLCs that should   *)
+(* be added or with HTLCs removed that should be removed, sign the         *)
+(* transaction and send it in a CommitmentSigned message.                  *)
+(***************************************************************************)
 SendSignedCommitment(ChannelID, UserID, OtherUserID) ==
     /\  \/ ChannelUserState[ChannelID][UserID] = "rev-keys-exchanged" /\ ChannelUserState' = [ChannelUserState EXCEPT ![ChannelID][UserID] = "update-commitment-signed"]
         \/ ChannelUserState[ChannelID][UserID] = "update-commitment-received" /\ ChannelUserState' = [ChannelUserState EXCEPT ![ChannelID][UserID] = "update-commitment-signed-received"]
@@ -535,6 +603,10 @@ SendSignedCommitment(ChannelID, UserID, OtherUserID) ==
     /\ UNCHANGED <<UserExtBalance, ChannelUserInventory, UserPreimageInventory, UserLatePreimages, LedgerTx, TxAge, UserHonest, UserChannelBalance, UserPayments>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Helper that specifies the outputs that we expect in a commitment        *)
+(* transaction received from the other party.                              *)
+(***************************************************************************)
 ExpectedOutputs(id, ChannelID, UserID) ==
     LET    allHTLCsInOutputs == {htlc \in IncHTLCsByStates({"NEW"}, ChannelUserVars[ChannelID][UserID]) : htlc.absTimelock > LedgerTime}
                                     \cup IncHTLCsByStates({"SENT-COMMIT", "PENDING-COMMIT", "COMMITTED", "OFF-TIMEDOUT", "FULFILLED", "SENT-REMOVE"}, ChannelUserVars[ChannelID][UserID])
@@ -566,6 +638,9 @@ ExpectedOutputs(id, ChannelID, UserID) ==
                             ] : htlc \in allHTLCsInOutputs}
     IN outputs
 
+(***************************************************************************)
+(* Helper to validate that a received HTLC transaction is as expected.     *)
+(***************************************************************************)
 IsExpectedHTLCTransaction(htlcTransaction, commitmentTx, Vars, DetailVars) ==
     /\ LET allHTLCsInOutputs == {htlc \in IncHTLCsByStates({"NEW"}, Vars) : htlc.absTimelock > LedgerTime}
                                     \cup IncHTLCsByStates({"SENT-COMMIT", "PENDING-COMMIT", "COMMITTED", "OFF-TIMEDOUT", "FULFILLED", "SENT-REMOVE"}, Vars)
@@ -592,6 +667,10 @@ IsExpectedHTLCTransaction(htlcTransaction, commitmentTx, Vars, DetailVars) ==
                            THEN 0
                            ELSE htlc.absTimelock
     
+(***************************************************************************)
+(* Receive a CommitmentSigned message and store the commitment transaction *)
+(* in our inventory.                                                       *)
+(***************************************************************************)
 ReceiveSignedCommitment(ChannelID, UserID) == 
     /\  \/ ChannelUserState[ChannelID][UserID] = "rev-keys-exchanged" /\ ChannelUserState' = [ChannelUserState EXCEPT ![ChannelID][UserID] = "update-commitment-received"]
         \/ ChannelUserState[ChannelID][UserID] = "update-commitment-signed" /\ ChannelUserState' = [ChannelUserState EXCEPT ![ChannelID][UserID] = "update-commitment-signed-received"]
@@ -630,6 +709,10 @@ ReceiveSignedCommitment(ChannelID, UserID) ==
     /\ UNCHANGED <<LedgerTx, TxAge, ChannelUsedTransactionIds, UserPreimageInventory, UserLatePreimages, UserHonest, UserExtBalance, ChannelPendingBalance, ChannelUserBalance, UserChannelBalance, UserPayments>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Revoke the just outdated commitment transaction by sending the          *)
+(* respective revocation private key in a RevokeAndAck message.            *)
+(***************************************************************************)
 RevokeAndAck(ChannelID, UserID, OtherUserID) ==
     /\ \/ ChannelUserState[ChannelID][UserID] = "update-commitment-received" /\ ChannelUserState' = [ChannelUserState EXCEPT ![ChannelID][UserID] = "rev-keys-exchanged"]
        \/ ChannelUserState[ChannelID][UserID] = "update-commitment-signed-received" /\ ChannelUserState' = [ChannelUserState EXCEPT ![ChannelID][UserID] = "update-commitment-signed"]
@@ -656,6 +739,9 @@ RevokeAndAck(ChannelID, UserID, OtherUserID) ==
     /\ UNCHANGED <<UserPreimageInventory, UserLatePreimages, ChannelUserBalance, UserExtBalance, LedgerTx, TxAge, ChannelUsedTransactionIds, ChannelPendingBalance, UserHonest, UserChannelBalance, UserPayments>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Receive a RevokeAndAck and store the private revocation key.            *)
+(***************************************************************************)
 ReceiveRevocationKey(ChannelID, UserID, OtherUserID) ==
     /\ \/ ChannelUserState[ChannelID][UserID] = "update-commitment-signed" /\ ChannelUserState' = [ChannelUserState EXCEPT ![ChannelID][UserID] = "rev-keys-exchanged"]
        \/ ChannelUserState[ChannelID][UserID] = "update-commitment-signed-received" /\ ChannelUserState' = [ChannelUserState EXCEPT ![ChannelID][UserID] = "update-commitment-received"]
@@ -716,6 +802,10 @@ ReceiveRevocationKey(ChannelID, UserID, OtherUserID) ==
     /\ UNCHANGED <<UserPreimageInventory, UserLatePreimages, LedgerTx, TxAge, ChannelUsedTransactionIds, UserHonest, UserExtBalance, UserChannelBalance, UserPayments>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Helper to determine whether a given transaction was revoked on the      *)
+(* ledger.                                                                 *)
+(***************************************************************************)
 TransactionWasRevoked(tx, ledger, Vars, DetailVars) ==
     /\ \E output \in tx.outputs :
         /\ \E spendingTx \in ledger :
@@ -733,6 +823,16 @@ TransactionWasRevoked(tx, ledger, Vars, DetailVars) ==
                                 /\ \/ \E revKey \in (htlcInput.witness.signatures \ {Vars.MyKey, DetailVars.OtherKey}) :
                                         revKey.Base \in {DetailVars.MyRKey.Base, DetailVars.OtherRKey.Base}
 
+(***************************************************************************)
+(* Helper to determine whether a given transaction can be revoked with the *)
+(* help of given additional keys.                                          *)
+(*                                                                         *)
+(* If the argument couldTheoretically is true, this helper returns true if *)
+(* a transaction could theoretically be revoked but cannot be revoked in   *)
+(* practice because the output to be spent has an amount of 0.  This is an *)
+(* artifact of our design decision to include outputs even if their amount *)
+(* is 0 which simplifies the specification at other places.                *)
+(***************************************************************************)
 TransactionCanBeRevokedWithExtraKeys(tx, ledger, couldTheoretically, extraKeys, Vars, DetailVars, Inventory) ==
     \E output \in tx.outputs :
         \/  /\  \/ ~ \E spendingTx \in ledger :
@@ -768,9 +868,16 @@ TransactionCanBeRevokedWithExtraKeys(tx, ledger, couldTheoretically, extraKeys, 
                                       /\ key.Index < DetailVars.MyRKey.Index
                                    \/ /\ key.Base = DetailVars.OtherRKey.Base
                                       /\ key \in Inventory.keys \cup extraKeys
+(***************************************************************************)
+(* Helper to determine whether a transaction can be revoked.               *)
+(***************************************************************************)
 TransactionCanBeRevoked(tx, ledger, couldTheoretically, Vars, DetailVars, Inventory) ==
     TransactionCanBeRevokedWithExtraKeys(tx, ledger, couldTheoretically, {}, Vars, DetailVars, Inventory)
                     
+(***************************************************************************)
+(* Helper to determine whether the party who has published a commitment    *)
+(* transaction has already spent their output.                             *)
+(***************************************************************************)
 PublishingPartyHasSpentTheirOutput(tx) ==
     /\ \E spendingTx \in LedgerTx :
         /\ Cardinality(spendingTx.outputs) = 1
@@ -786,6 +893,10 @@ PublishingPartyHasSpentTheirOutput(tx) ==
                         /\ key \in RevocationKeys
                         /\ key \notin input.witness.signatures
 
+(***************************************************************************)
+(* Helper to determine whether an outgoing persisted HTLC was spent using  *)
+(* the timeout or revocation condition.                                    *)
+(***************************************************************************)
 OutgoingPersistedHTLCWasSpentUsingTimeoutOrRevocationCondition(commitTx, newTxs, Vars) ==    
     \E htlc \in HTLCsByStates({"PERSISTED"}, Vars) \cap Vars.OutgoingHTLCs :
         /\ htlc.hash \in Ledger!HashesInCommitTransaction(commitTx)
@@ -799,6 +910,10 @@ OutgoingPersistedHTLCWasSpentUsingTimeoutOrRevocationCondition(commitTx, newTxs,
                         /\ htlc.hash = condition.data.hash
                 /\ "preimage" \notin DOMAIN input.witness
 
+(***************************************************************************)
+(* Helper to determine whether the other party has published a transaction *)
+(* that we cannot punish.                                                  *)
+(***************************************************************************)
 UnpunishableTxByOtherPartyWasPublished(Balance, Vars, DetailVars, Inventory) ==
     /\ Cardinality(DetailVars.OldOtherCommitTXIds \cap Ledger!LedgerTxIds) > 0
     /\ \E oldCommitmentTx \in LedgerTx :
@@ -818,6 +933,10 @@ UnpunishableTxByOtherPartyWasPublished(Balance, Vars, DetailVars, Inventory) ==
                 /\ \E key \in condition.data.keys : key \in RevocationKeys
                 /\ condition.data.keys \in SUBSET Inventory.keys
                 
+(***************************************************************************)
+(* Helper that is added to some actions that updates the state of HTLCs if *)
+(* they are committed, aborted, persisted, or timed out.                   *)
+(***************************************************************************)
 AndNoteCommittedAndUncommittedAndPersistedHTLCs(tx, action, ChannelID, UserID) ==
     /\ ChannelUserState' = [ChannelUserState EXCEPT ![ChannelID][UserID] = "closing"]
     /\ TransactionSpendsFundingOutput(tx, ChannelUserDetailVars[ChannelID][UserID])
@@ -856,6 +975,9 @@ AndNoteCommittedAndUncommittedAndPersistedHTLCs(tx, action, ChannelID, UserID) =
                                     ]
                              ELSE [ChannelUserDetailVars EXCEPT ![ChannelID][UserID].Debug = Append(@, action)]
     
+(***************************************************************************)
+(* Close the channel by publishing the latest commitment transaction.      *)
+(***************************************************************************)
 CloseChannel(ChannelID, UserID) ==
     /\ FORCE_LONG_SIMULATION => TLCGet("level") > SIMULATION_MIN_LENGTH
     /\ ChannelUserState[ChannelID][UserID] # "closed" /\ ChannelUserState[ChannelID][UserID] # "closing"
@@ -881,7 +1003,11 @@ NoteThatOtherPartyClosedHonestlyEnabled(ChannelID, UserID) ==
             /\ ~\E output \in tx.outputs : \E condition \in output.conditions : \E key \in condition.data.keys :
                 /\ key \in RevocationKeys
                 /\ key \in ChannelUserInventory[ChannelID][UserID].keys
-                
+
+(***************************************************************************)
+(* Note that the other party has honestly closed the channel, i.e.  by     *)
+(* publishing the latest                                                   *)
+(***************************************************************************)                
 NoteThatOtherPartyClosedHonestly(ChannelID, UserID) ==
     /\ NoteThatOtherPartyClosedHonestlyEnabled(ChannelID, UserID)
     /\ ChannelUserState' = [ChannelUserState EXCEPT ![ChannelID][UserID] = "closing"]
@@ -890,6 +1016,9 @@ NoteThatOtherPartyClosedHonestly(ChannelID, UserID) ==
     /\ UNCHANGED <<ChannelMessages, ChannelUserInventory, UserPreimageInventory, UserLatePreimages, LedgerTx, TxAge, ChannelUsedTransactionIds, UserHonest, UserExtBalance, UserChannelBalance, UserPayments>>
     /\ UNCHANGED UnchangedVars
 
+(***************************************************************************)
+(* Helper to calculate inputs for outputs that are spendable by us.        *)
+(***************************************************************************)
 MyPossibleTxInputs(parentSet, ChannelID, UserID) ==
     UNION {
         UNION {
@@ -905,7 +1034,16 @@ MyPossibleTxInputs(parentSet, ChannelID, UserID) ==
                           ELSE {}
                  ]
             : output \in {output \in parent.outputs : output.amount >= 0 /\ (~\E input \in Ledger!LedgerInputs(LedgerTx) : input.parentId = parent.id /\ input.outputId = output.outputId) } } : parent \in parentSet}
+(***************************************************************************)
+(* Output of a transaction published by us that makes coins spendable only *)
+(* by us.                                                                  *)
+(***************************************************************************)
 MyPossibleTxOutputs(parentId1, amount1, ChannelID, UserID) == [parentId: {parentId1}, outputId: {1}, amount: {amount1}, conditions: {{[type |-> SingleSignature, data |-> [keys |-> {ChannelUserVars[ChannelID][UserID].MyKey}], absTimelock |-> 0, relTimelock |-> 0]}}]
+(***************************************************************************)
+(* Possible transactions that we could publish that spend outputs          *)
+(* spendable by us and potentially another party to an output that is only *)
+(* spendable by us.                                                        *)
+(***************************************************************************)
 MyPossibleNewTransactions(txInputs, parentSet, txId, ChannelID, UserID) == 
     IF txInputs = {} 
         THEN {}
@@ -914,6 +1052,9 @@ MyPossibleNewTransactions(txInputs, parentSet, txId, ChannelID, UserID) ==
               outputs: Subset1(MyPossibleTxOutputs(txId, Ledger!AmountSpentByInputs(txInputs, LedgerTx), ChannelID, UserID)),
               absTimelock: {MaxOfSet(UNION UNION {{{timelock \in {condition.absTimelock : condition \in output.conditions} : timelock <= LedgerTime} : output \in parent.outputs} : parent \in parentSet})}
               ]
+(***************************************************************************)
+(* Helper to remove transactions that spend only our own outputs.          *)
+(***************************************************************************)
 MyPossibleNewTransactionsWithoutOwnParents(parentSet, ChannelID, UserID) ==
     { tx \in MyPossibleNewTransactions(MyPossibleTxInputs(parentSet, ChannelID, UserID), parentSet, TIO!GetNewTransactionId(ChannelID), ChannelID, UserID) :
         LET parents == Ledger!ConfirmedParentTx(tx, LedgerTx)
@@ -955,7 +1096,11 @@ MyPossibleNewTransactionsWithoutOwnParentMultiple(parentSet, ChannelID, UserID) 
     }
 
 
-\* Redeem an HTLC in the honest case    
+(***************************************************************************)
+(* Redeem an HTLC on-chain in a commitment transaction that was honestly   *)
+(* published.  Publishes a second-layer HTLC success or timeout            *)
+(* transaction.                                                            *)
+(***************************************************************************)   
 RedeemHTLCAfterClose(ChannelID, UserID) ==
     /\ ChannelUserState[ChannelID][UserID] = "closing"
     /\ Cardinality(HTLCsByStates({"COMMITTED", "SENT-REMOVE", "PENDING-REMOVE", "RECV-REMOVE", "FULFILLED", "OFF-TIMEDOUT"}, ChannelUserVars[ChannelID][UserID])) >= 1
@@ -1060,6 +1205,10 @@ RedeemHTLCAfterClose(ChannelID, UserID) ==
     /\ UNCHANGED <<ChannelUserState, ChannelMessages, ChannelUserInventory, UserPreimageInventory, UserLatePreimages, UserHonest, UserExtBalance>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Punish the other user if the other user has published an outdated       *)
+(* transaction.                                                            *)
+(***************************************************************************)
 Punish(ChannelID, UserID) ==
     /\ Cardinality(LedgerTx) > 2
     /\ Cardinality((ChannelUserDetailVars[ChannelID][UserID].OldOtherCommitTXIds \cup ChannelUserDetailVars[ChannelID][UserID].PendingOldOtherCommitTxIds) \cap Ledger!LedgerTxIds) > 0
@@ -1093,6 +1242,10 @@ Punish(ChannelID, UserID) ==
     /\ UNCHANGED <<ChannelMessages, ChannelUserVars, ChannelUserInventory, UserPreimageInventory, UserLatePreimages, ChannelUserBalance, UserExtBalance, ChannelPendingBalance, UserHonest, UserChannelBalance, UserPayments>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Note that the other user has cheated but punish later.  This is         *)
+(* required to let time advance if we do not punish directly.              *)
+(***************************************************************************)
 WillPunishLater(ChannelID, UserID) ==
     /\ ~ChannelUserVars[ChannelID][UserID].HaveCheated
     /\ ChannelUserState[ChannelID][UserID] \notin {"closed", "closing"}
@@ -1105,6 +1258,10 @@ WillPunishLater(ChannelID, UserID) ==
     /\ UNCHANGED <<ChannelUserState, ChannelMessages, ChannelUserVars, ChannelUserInventory, UserPreimageInventory, UserLatePreimages, ChannelUserBalance, UserExtBalance, ChannelPendingBalance, UserHonest, LedgerTx, TxAge, ChannelUsedTransactionIds, UserChannelBalance, UserPayments>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Note that an HTLC was timed out on-chain by the other party and update  *)
+(* this HTLC's state.                                                      *)
+(***************************************************************************)
 NoteThatHTLCTimedOutOnChain(ChannelID, UserID) ==
     /\ ChannelUserState[ChannelID][UserID] = "closing"
     /\ \E htlc \in ChannelUserVars[ChannelID][UserID].IncomingHTLCs \cup ChannelUserVars[ChannelID][UserID].OutgoingHTLCs :
@@ -1145,7 +1302,10 @@ NoteAbortedHTLCsEnabled(ChannelID, UserID) ==
            abortedIncomingHTLCs == {htlc \in ChannelUserVars[ChannelID][UserID].IncomingHTLCs : htlc.state \in {"NEW"} }
        IN 
           /\ Cardinality(abortedOutgoingHTLCs) + Cardinality(abortedIncomingHTLCs) > 0
-    
+(***************************************************************************)
+(* Note that an HTLC was aborted, i.e.  a commitment transaction was       *)
+(* published that does not contain the HTLC.  Update the HTLC's state.     *)
+(***************************************************************************)
 NoteAbortedHTLCs(ChannelID, UserID) ==
     /\ NoteAbortedHTLCsEnabled(ChannelID, UserID)
     /\ LET abortedOutgoingHTLCs == {htlc \in ChannelUserVars[ChannelID][UserID].OutgoingHTLCs : htlc.state \in {"NEW"} }
@@ -1160,6 +1320,9 @@ NoteAbortedHTLCs(ChannelID, UserID) ==
     /\ UNCHANGED <<ChannelUserState, LedgerTx, TxAge, ChannelMessages, ChannelUserInventory, UserPreimageInventory, UserLatePreimages, ChannelUsedTransactionIds, UserHonest, ChannelUserBalance, UserExtBalance, ChannelPendingBalance, UserChannelBalance, UserPayments>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Helper for transaction ids that are relevant for our channel.           *)
+(***************************************************************************)
 ChannelTxIds(ChannelID, UserID) ==
     {invTx.id : invTx \in ChannelUserInventory[ChannelID][UserID].transactions}
         \cup {ChannelUserDetailVars[ChannelID][UserID].LatestCommitTransactionId, ChannelUserDetailVars[ChannelID][UserID].PendingNewCommitTransactionId, ChannelUserDetailVars[ChannelID][UserID].CurrentOtherCommitTX.id}
@@ -1167,6 +1330,10 @@ ChannelTxIds(ChannelID, UserID) ==
         \cup ChannelUserDetailVars[ChannelID][UserID].PendingOldOtherCommitTxIds \cup ChannelUserDetailVars[ChannelID][UserID].OldOtherCommitTXIds
         \cup {ChannelUserDetailVars[ChannelID][UserID].fundingTxId}
     
+(***************************************************************************)
+(* Note that an HTLC was fulfilled on-chain by the other user.  Store the  *)
+(* preimage in our inventory and update the HTLC's state.                  *)
+(***************************************************************************)
 NoteThatHTLCFulfilledOnChainByOtherUser(ChannelID, UserID) ==
     /\ \E htlcSet \in SUBSET(ChannelUserVars[ChannelID][UserID].OutgoingHTLCs \cup ChannelUserVars[ChannelID][UserID].IncomingHTLCs) :
         /\ Cardinality(htlcSet) > 0
@@ -1209,6 +1376,10 @@ NoteThatHTLCFulfilledOnChainByOtherUser(ChannelID, UserID) ==
     /\ UNCHANGED <<ChannelUserState, LedgerTx, TxAge, ChannelUsedTransactionIds, ChannelMessages, ChannelUserInventory, UserHonest, UserExtBalance>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Note that an HTLC was fulfilled on-chain in another channel.  We learn  *)
+(* the preimage and store it in our preimage.                              *)
+(***************************************************************************)
 NoteThatHTLCFulfilledOnChainInOtherChannel(ChannelID, UserID) ==
     /\ \E htlcSet \in SUBSET(ChannelUserVars[ChannelID][UserID].IncomingHTLCs) :
         /\ Cardinality(htlcSet) > 0
@@ -1235,6 +1406,10 @@ NoteThatHTLCFulfilledOnChainInOtherChannel(ChannelID, UserID) ==
     /\ UNCHANGED <<ChannelUserDetailVars, ChannelUserVars, ChannelUserBalance, ChannelPendingBalance, ChannelUserState, LedgerTx, TxAge, ChannelUsedTransactionIds, ChannelMessages, ChannelUserInventory, UserHonest, UserExtBalance, UserChannelBalance, UserPayments>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Ignore a CommitmentSigned message when we are already in channel        *)
+(* shutdown.                                                               *)
+(***************************************************************************)
 IgnoreMessageDuringClosing(ChannelID, UserID, OtherUserID) ==
     /\ ChannelUserState[ChannelID][UserID] = "closing"
     /\ \E message \in MyMessages(ChannelID, UserID) :
@@ -1256,6 +1431,10 @@ ShouldNoteIncomingUnfulfillableHTLCsAsTimedout(ChannelID, UserID) ==
                 /\ condition.type \in {SingleSigHashLock, AllSigHashLock}
                 /\ condition.data.hash = htlc.hash
     
+(***************************************************************************)
+(* Note that the channel was closed and all HTLCs have been redeemed.      *)
+(* This terminates the actions of this module.                             *)
+(***************************************************************************)
 NoteThatChannelClosedAndAllHTLCsRedeemed(ChannelID, UserID) ==
     /\ ChannelUserState[ChannelID][UserID] = "closing"
     /\ ChannelUserState' = [ChannelUserState EXCEPT ![ChannelID][UserID] = "closed"]
@@ -1282,6 +1461,14 @@ NoteThatChannelClosedAndAllHTLCsRedeemed(ChannelID, UserID) ==
     /\ UNCHANGED <<ChannelMessages, LedgerTx, TxAge, ChannelUsedTransactionIds, UserExtBalance, ChannelUserInventory, UserPreimageInventory, UserLatePreimages, UserHonest, UserChannelBalance, UserPayments>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Cheat if we are dishonest.                                              *)
+(*                                                                         *)
+(* Cheating can be done either by signing and publishing any transaction   *)
+(* from our inventory (including outdated commitment transactions) or by   *)
+(* creating and publishing a new transaction that spends outputs that we   *)
+(* are able to spend using the keys and preimages in our inventory.        *)
+(***************************************************************************)
 Cheat(ChannelID, UserID) ==
     /\ FORCE_LONG_SIMULATION => TLCGet("level") > SIMULATION_MIN_LENGTH
     /\ UserHonest[UserID] = FALSE 
@@ -1335,6 +1522,9 @@ Cheat(ChannelID, UserID) ==
     /\ UNCHANGED <<ChannelMessages, UserHonest, ChannelUserInventory, UserPreimageInventory, UserLatePreimages, ChannelUserBalance, UserExtBalance, ChannelPendingBalance, UserChannelBalance, UserPayments>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Helper for specifying the order in which closing actions are executed.  *)
+(***************************************************************************)
 ClosingActions(ChannelID, UserID, OtherUserID) ==
     IF ENABLED NoteThatHTLCTimedOutOnChain(ChannelID, UserID)
     THEN NoteThatHTLCTimedOutOnChain(ChannelID, UserID)
@@ -1406,7 +1596,12 @@ CLOSENoteThatChannelClosedAndAllHTLCsRedeemed(ChannelID, UserID) ==
     /\ ~ENABLED NoteThatHTLCFulfilledOnChainByOtherUser(ChannelID, UserID)
     /\ NoteThatChannelClosedAndAllHTLCsRedeemed(ChannelID, UserID)
             
-            
+(***************************************************************************)
+(* Initiate shutdown by sending an InitiateShutdown message.               *)
+(*                                                                         *)
+(* Disabled to reduce state space and because this is not neccessary as    *)
+(* any user can start closing the channel at any time.                     *)
+(***************************************************************************)
 InitiateShutdown(ChannelID, UserID, OtherUserID) ==
     /\ FALSE
     /\ ChannelUserState[ChannelID][UserID] \in {"rev-keys-exchanged"}
@@ -1417,6 +1612,9 @@ InitiateShutdown(ChannelID, UserID, OtherUserID) ==
     /\ UNCHANGED <<ChannelUserState, ChannelUserInventory, UserPreimageInventory, UserLatePreimages, LedgerTx, TxAge, ChannelUsedTransactionIds, ChannelUserVars, ChannelUserBalance, UserExtBalance, ChannelPendingBalance, UserHonest, UserChannelBalance, UserPayments>>
     /\ UNCHANGED UnchangedVars
     
+(***************************************************************************)
+(* Receive an InitiateShutdown message.                                    *)
+(***************************************************************************)
 ReceiveInitiateShutdown(ChannelID, UserID) ==
     /\ FALSE
     /\ \E message \in MyMessages(ChannelID, UserID) :
