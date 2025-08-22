@@ -1,0 +1,117 @@
+TLC2 Version 2.20 of Day Month 20?? (rev: 29f604f)
+Running Random Simulation with seed 7424861673798177561 with 96 workers on 192 cores with 27305MB heap and 64MB offheap memory [pid: 201824] (Linux 6.8.0-71-generic amd64, Ubuntu 21.0.8 x86_64).
+Parsing file /home/grundmann/lightning-tla/SpecificationIIItoIV.toolbox/RefineSpecIV/MC.tla
+Parsing file /home/grundmann/lightning-tla/SpecificationIIItoIV.tla
+Parsing file /tmp/tlc-798499611696880756/TLC.tla (jar:file:/home/grundmann/lightning-tla/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-798499611696880756/_TLCTrace.tla (jar:file:/home/grundmann/lightning-tla/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /home/grundmann/lightning-tla/SpecificationIII.tla
+Parsing file /home/grundmann/lightning-tla/BaseSpec.tla
+Parsing file /tmp/tlc-798499611696880756/Integers.tla (jar:file:/home/grundmann/lightning-tla/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Parsing file /tmp/tlc-798499611696880756/Sequences.tla (jar:file:/home/grundmann/lightning-tla/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-798499611696880756/Naturals.tla (jar:file:/home/grundmann/lightning-tla/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /home/grundmann/lightning-tla/SpecificationIV.tla
+Parsing file /home/grundmann/lightning-tla/SumAmounts.tla
+Parsing file /tmp/tlc-798499611696880756/FiniteSets.tla (jar:file:/home/grundmann/lightning-tla/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /home/grundmann/lightning-tla/PCAbstract.tla
+Parsing file /home/grundmann/lightning-tla/HTLCUser.tla
+Parsing file /home/grundmann/lightning-tla/HTLCUserHelper.tla
+Parsing file /home/grundmann/lightning-tla/LedgerTime.tla
+Parsing file /home/grundmann/lightning-tla/IdealPayments.tla
+Parsing file /home/grundmann/lightning-tla/IdealUser.tla
+Parsing file /tmp/tlc-798499611696880756/TLCExt.tla (jar:file:/home/grundmann/lightning-tla/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Semantic processing of module Naturals
+Semantic processing of module Integers
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module IdealPayments
+Semantic processing of module SumAmounts
+Semantic processing of module IdealUser
+Semantic processing of module BaseSpec
+Semantic processing of module PCAbstract
+Semantic processing of module HTLCUserHelper
+Semantic processing of module HTLCUser
+Semantic processing of module LedgerTime
+Semantic processing of module SpecificationIII
+Semantic processing of module SpecificationIV
+Semantic processing of module SpecificationIIItoIV
+Semantic processing of module TLCExt
+Semantic processing of module _TLCTrace
+Semantic processing of module MC
+Linting of module IdealPayments
+Linting of module SumAmounts
+Linting of module IdealUser
+Linting of module BaseSpec
+Linting of module PCAbstract
+Linting of module HTLCUserHelper
+Linting of module HTLCUser
+Linting of module LedgerTime
+Linting of module SpecificationIII
+Linting of module SpecificationIV
+Linting of module SpecificationIIItoIV
+Linting of module TLCExt
+Linting of module _TLCTrace
+Linting of module MC
+Starting... (2025-08-22 14:20:39)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computed 64 initial states...
+Finished computing initial states: 64 distinct state generated at 2025-08-22 14:20:39.
+Progress: 8791258 states checked, 30113 traces generated (trace length: mean=0, var(x)=275, sd=17)
+Progress: 18048093 states checked, 61831 traces generated (trace length: mean=0, var(x)=272, sd=17)
+Progress: 27290617 states checked, 93254 traces generated (trace length: mean=0, var(x)=273, sd=17)
+Progress: 36497502 states checked, 124567 traces generated (trace length: mean=0, var(x)=275, sd=17)
+Progress: 45700317 states checked, 156115 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 54909694 states checked, 187414 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 64106070 states checked, 218904 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 73304409 states checked, 250092 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 82216624 states checked, 280229 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 91440597 states checked, 311783 traces generated (trace length: mean=0, var(x)=275, sd=17)
+Progress: 100631738 states checked, 343023 traces generated (trace length: mean=0, var(x)=275, sd=17)
+Progress: 109832624 states checked, 374311 traces generated (trace length: mean=0, var(x)=275, sd=17)
+Progress: 119013895 states checked, 405543 traces generated (trace length: mean=0, var(x)=275, sd=17)
+Progress: 128190141 states checked, 437024 traces generated (trace length: mean=0, var(x)=275, sd=17)
+Progress: 137346162 states checked, 468196 traces generated (trace length: mean=0, var(x)=275, sd=17)
+Progress: 146481708 states checked, 499263 traces generated (trace length: mean=0, var(x)=275, sd=17)
+Progress: 155618841 states checked, 530412 traces generated (trace length: mean=0, var(x)=275, sd=17)
+Progress: 164742062 states checked, 561393 traces generated (trace length: mean=0, var(x)=275, sd=17)
+Progress: 173700884 states checked, 591930 traces generated (trace length: mean=0, var(x)=275, sd=17)
+Progress: 182923676 states checked, 623415 traces generated (trace length: mean=0, var(x)=275, sd=17)
+Progress: 192118566 states checked, 654938 traces generated (trace length: mean=0, var(x)=275, sd=17)
+Progress: 201297356 states checked, 686353 traces generated (trace length: mean=0, var(x)=275, sd=17)
+Progress: 210458520 states checked, 717556 traces generated (trace length: mean=0, var(x)=275, sd=17)
+Progress: 219617608 states checked, 748924 traces generated (trace length: mean=0, var(x)=275, sd=17)
+Progress: 228766845 states checked, 780447 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 237900363 states checked, 811618 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 247021112 states checked, 842711 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 255950689 states checked, 873143 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 265172763 states checked, 904713 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 274038253 states checked, 934813 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 280713822 states checked, 957664 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 287327322 states checked, 980306 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 293953866 states checked, 1002933 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 300494371 states checked, 1025273 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 307120674 states checked, 1047897 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 313664200 states checked, 1070068 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 320158325 states checked, 1092224 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 326729936 states checked, 1114705 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 333288840 states checked, 1137001 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 339887088 states checked, 1159689 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 346391164 states checked, 1181834 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 353038642 states checked, 1204598 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 359574898 states checked, 1226857 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 366150617 states checked, 1249294 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 372563119 states checked, 1270883 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 379115450 states checked, 1293145 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 385702841 states checked, 1315848 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 392222361 states checked, 1337947 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 398715899 states checked, 1360047 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 405310022 states checked, 1382445 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 411853294 states checked, 1404837 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 418275638 states checked, 1426847 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 424698448 states checked, 1448882 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 431116632 states checked, 1470773 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 437620658 states checked, 1493096 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 444152778 states checked, 1515439 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 450622952 states checked, 1537523 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 457015230 states checked, 1559392 traces generated (trace length: mean=0, var(x)=274, sd=17)
+Progress: 463394912 states checked, 1581103 traces generated (trace length: mean=0, var(x)=274, sd=17)

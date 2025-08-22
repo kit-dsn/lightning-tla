@@ -101,8 +101,8 @@ if [ "$LEVEL" -ge 1 ]; then
 		exec java $JAVA_OPTS -cp $TLA2TOOLS tlc2.TLC SpecificationIV.toolbox/MultiA3B1B1/MC.tla -workers auto -deadlock | tee $OUTPUT_DIR/M4.log
 		check_model_checking_success "M4"
 
-		echo "Model checking M5: Payment from user A over user B, user C, and user D to user E"
-		exec java $JAVA_OPTS -cp $TLA2TOOLS tlc2.TLC SpecificationIV.toolbox/MultiAE3/MC.tla -workers auto -deadlock | tee $OUTPUT_DIR/M5.log
+		echo "Model checking M5: Payment from user A over user B, and user C to user D"
+		exec java $JAVA_OPTS -cp $TLA2TOOLS tlc2.TLC SpecificationIV.toolbox/MultiAD3/MC.tla -workers auto -deadlock | tee $OUTPUT_DIR/M5.log
 		check_model_checking_success "M5"
 	fi
 

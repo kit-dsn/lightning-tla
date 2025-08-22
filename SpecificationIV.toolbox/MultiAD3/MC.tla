@@ -3,13 +3,13 @@ EXTENDS SpecificationIV, TLC
 
 \* CONSTANT definitions @modelParameterConstants:0ActiveChannels
 const_1738616704053363000 == 
-1..4
+1..3
 ----
 
 \* CONSTANT definitions @modelParameterConstants:2UserInitialPayments
 const_1738616704053364000 == 
 <<
-    {[id |-> 1, amount |-> 3, path |-> <<[name |-> "UserA"], [name |-> "UserB"], [name |-> "UserC"], [name |-> "UserD"], [name |-> "UserE"]>>, absTimelock |-> 40]},
+    {[id |-> 1, amount |-> 3, path |-> <<[name |-> "UserA"], [name |-> "UserB"], [name |-> "UserC"], [name |-> "UserD"]>>, absTimelock |-> 40]},
     {
     },
     {

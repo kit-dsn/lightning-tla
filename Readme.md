@@ -184,13 +184,13 @@ The property checked by the models C1 to C5 is the property `SpecificationIIIa!S
 
 The following tables lists the files for the models that we used to verify the refinement mapping 4.
 
-|                   Scenario                                                                               |                    File                    |
-|----------------------------------------------------------------------------------------------------------|--------------------------------------------|
-| Payment from user A over B to user C                                                                     | SpecificationIV.toolbox/MultiA3/MC.tla     |
-| Two payments: Payment from user A over B to C and payment from user C over B to A                        | SpecificationIV.toolbox/MultiA3C2/MC.tla   |
-| Two concurrent payments: Payment from user A over B to C and payment from user A to B                    | SpecificationIV.toolbox/MultiA3A2/MC.tla   |
-| Three payments: Payment from user A over B to C, payment from user B to A, and payment from user B to C  | SpecificationIV.toolbox/MultiA3B1B1/MC.tla |
-| Payment from user A over B, C and D to user E                                                            | SpecificationIV.toolbox/MultiAE3/MC.tla    |
+| ID |                   Scenario                                                                               |                    File                    |
+|----|----------------------------------------------------------------------------------------------------------|--------------------------------------------|
+| M1 | Payment from user A over B to user C                                                                     | SpecificationIV.toolbox/MultiA3/MC.tla     |
+| M2 | Two payments: Payment from user A over B to C and payment from user C over B to A                        | SpecificationIV.toolbox/MultiA3C2/MC.tla   |
+| M3 | Two concurrent payments: Payment from user A over B to C and payment from user A to B                    | SpecificationIV.toolbox/MultiA3A2/MC.tla   |
+| M4 | Three payments: Payment from user A over B to C, payment from user B to A, and payment from user B to C  | SpecificationIV.toolbox/MultiA3B1B1/MC.tla |
+| M5 | Payment from user A over B and C to user D                                                               | SpecificationIV.toolbox/MultiAD3/MC.tla    |
 
 ### Models for Simulation
 
