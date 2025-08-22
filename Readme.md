@@ -9,6 +9,9 @@ This repository contains the TLA+ specification of Lightning, refinements, model
 
 The repository also includes scripts to reproduce the results reported in Table 1 and Table 2 of the paper and to check every refinement step in simulation mode.
 
+This readme gives an overview of the main specification files and models in this repository and a guide on how to run the model checker.
+For a detailed documentation of the ideas behind the specification, we refer to the appendix of the paper's [extended version](https://arxiv.org/abs/2505.15568).
+
 Overview of Files
 -----------------
 
@@ -32,7 +35,7 @@ The files in the \*.toolbox directories specify the scenarios to be model checke
 How to Run
 ----------
 
-The recommended way is to run the model checker directly on your Unix system. This requires `java` to be in your `$PATH`.
+The recommended way is to run the model checker directly on your Unix system. This requires `java` to be in your `$PATH` (on Ubuntu, you can install the `openjdk-17-jre-headless` package, for example).
 Alternatively, you can use the Docker image provided. Note that the model checker can be much slower when using Docker compared to native execution.
 The following explanation assumes that the working directory is the root directory of this repository.
 
@@ -52,22 +55,24 @@ The option `-v` mounts the current directory in the Docker container. The option
 ### Model Checking
 
 The model checker can be started with the script `./run-tlc.sh`.
-The script takes two parameters. The first parameter is required and specifies which model checking jobs should be run; the second parameter points to the file `tla2tools.jar`. When using Docker, the second parameter can be omitted.
+The script takes two parameters. The first parameter is required and specifies which model checking jobs should be run; the second parameter points to the file `tla2tools.jar`. When using Docker, the second parameter can be omitted (in the Docker image, `tla2tools.jar` is at `/tlaplus/tla2tools.jar`).
 
 For a smoke test, start the script using the parameter `--smoke-test`: `./run-tlc.sh --smoke-test tla2tools.jar`
 The script creates a directory `output` where the output files are located and starts the model checker for a very simple model. After a couple of seconds, the script should terminate with the last line being `Successfully checked smoke_test.`.
 
 To run the actual models that have been used for the paper, the following options are available for the first parameter of the script `./run-tlc.sh`. E.g., for a brief evalution, you can run `./run-tlc.sh --brief tla2tools.jar`.
 
-| Value    |                         Models                   | Runtime (40 cores) |
+| Value    |                         Models                   | Runtime (96 cores) |
 |----------|--------------------------------------------------|--------------------|
 | --brief  | C1, C2, C3,         M1                           | ~ 30 min           |
 | --medium | C1, C2, C3,         M1, M2, M3                   | ~ 2 hours          |
 | --long   | C1, C2, C3, C4,     M1, M2, M3, M4, M5, S1 - S9  | ~ 2 days           |
 | --all    | C1, C2, C3, C4, C5, M1, M2, M3, M4, M5, S1 - S9  | ~ 8 weeks          |
 
-In the third column, the expected runtime on a server with a CPU with 40 physical cores is given (native execution without Docker).
-Using only two cores, the runtime for the value `--brief` is about TODO TODO TODO.
+In the third column, the expected runtime on a server with a CPU with 96 physical cores is given (native execution without Docker).
+Using only two CPU cores, the runtime for the value `--brief` is about 12 hours on an Intel Core i7-6700 CPU from 2015 and TODO hours on an AMD EPYC 9174F from 2022.
+
+Depending on the number of workers used on your machine, it might be that the default size of memory is not sufficient and the model checker failes with an "Out of memory" error. In this case, you can increase the number of memory available to the model checker by adding the parameter `-Xmx` to `JAVA_OPTS` in `run-tlc.sh` (e.g., `-Xmx32G` for 32 GB).
 
 In the second column, the identifiers C1 to C5 refer to the entries in Table 1 (as in the paper).
 Analogously, we use the identifiers M1 to M5 for the entries in Table 2.
@@ -113,44 +118,51 @@ If a simulation run has failed, a trace that violates the checked property can b
 Progress: 692531 states checked, 66 traces generated (trace length: mean=22, var(x)=1005, sd=32)
 ```
 
+In the directory `output-full`, you can find logs from an execution of `./run-tlc.sh -all` on a server with 96 physical CPU cores.
+
 Specifications
 --------------
 
+In this section, we give a brief overview of the main specification files in this repository.
+An detailed documentation of the ideas behind the specification can be found in the appendix of the paper's [extended version](https://arxiv.org/abs/2505.15568).
+
 ### Specification (I)
 
-Specification (I), defined in `SpecificationI.tla` is our TLA+ specification of Lightning.
+Specification (I), defined in `SpecificationI.tla` is the TLA+ specification of Lightning that is presented in Section 4 of the paper.
 Each step is one of the following:
   - A user makes a step in a payment channel, or
-  - a user makes a step for multi-hop payments, or
+  - a user makes a step for an HTLC-based payment, or
   - time advances, or
-  - the system terminates if all channels have been closed.
+  - the system terminates and calculates the final on-chain balances if all channels have been closed.
 
 ### Specification (II)
 
-Specification (II), defined in `SpecificationII.tla`, equals specification (I) except for how time advances. As explained in the paper in Section VI.A, time advances in specification (II) from one zone (group of bisimilar states) to the next zone instead of allowing for time to advance to every single point in time.
+Specification (II), defined in `SpecificationII.tla`, equals specification (I) except for how time advances. As explained in the paper in Section 6.1, time advances in specification (II) from one zone (group of bisimilar states) to the next zone instead of allowing for time to advance to every single point in time.
 
 ### Specification (IIa)
 
-Specification (IIa), defined in `SpecificationIIa.tla`, models a single payment channel with two users that are part of specification (II). To model effects that other channels have on the payment channel, the state of the specification can also be changed by actions of the module defined in `MultiHopMock.tla`.
+Specification (IIa), defined in `SpecificationIIa.tla`, models a single payment channel with two users that are part of specification (II). This is mentioned in the paper in Section 6.2. To model effects that other channels have on the payment channel, the state of the specification can also be changed by actions of the module defined in `MultiHopMock.tla`.
 
 ### Specification (III)
 
-Specification (III), defined in `SpecificationIII.tla`, models idealized payment channels instead of modeling each payment channel by modeling two users exchanging messages and transactions.
+Specification (III), defined in `SpecificationIII.tla`, models idealized payment channels instead of modeling each payment channel by modeling two users exchanging messages and transactions (see Section 6.2 of the paper).
 
 ### Specification (IIIa)
 
-Specification (IIIa), defined in `SpecificationIIIa.tla`, models a single idealized payment channel. As in specification (IIa), the effects of other channels on the payment channel are mocked.
+Specification (IIIa), defined in `SpecificationIIIa.tla`, models a single idealized payment channel (see Section 6.2 of the paper). As in specification (IIa), the effects of other channels on the payment channel are mocked.
 
 ### Specification (IV)
 
-Specification (IV), defined in `SpecificationIV.tla`, equals specification (III) except for how time advances. Specification (IV) uses the same approach for advancing time as specification (II).
+Specification (IV), defined in `SpecificationIV.tla`, equals specification (III) except for how time advances (see Section 6.3 of the paper). Specification (IV) uses the same approach for advancing time as specification (II).
 
 ### Specification (V)
 
-Specification (V), defined in `SpecificationV.tla`, is the security property presented in the paper in Figures 3 to 5 (Figure 2 contains an excerpt).
+Specification (V), defined in `SpecificationV.tla`, is the security property presented in the paper in Section 5 and Figures 2 to 4.
 
 Models for Model Checking
 -------------------------
+
+Section 7 of the paper describes various models that we used to model check the refinement steps. In the following, we describe which files correspond to the models mentioned in the paper.
 
 ### Models for Refinement Mapping 2a
 

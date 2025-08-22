@@ -1,6 +1,10 @@
 --------------------------- MODULE SpecificationV ---------------------------
 
 (***************************************************************************)
+(* Specification of the main security property                             *)
+(***************************************************************************)
+
+(***************************************************************************)
 (* Variables for the external balance on the blockchain, internal balance, *)
 (* set of payments, and whether a user is honest.  Each variable is a      *)
 (* function that contains a variable for each id in UserIds.               *)
