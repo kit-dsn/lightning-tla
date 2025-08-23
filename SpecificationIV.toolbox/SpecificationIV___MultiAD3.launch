@@ -39,7 +39,7 @@
     <listAttribute key="modelParameterConstants">
         <listEntry value="ActiveChannels;;1..4;0;0"/>
         <listEntry value="SingleSignature;;SingleSignature;1;0"/>
-        <listEntry value="UserInitialPayments;;&lt;&lt;&#10;    {[id |-&gt; 1, amount |-&gt; 3, path |-&gt; &lt;&lt;[name |-&gt; &quot;UserA&quot;], [name |-&gt; &quot;UserB&quot;], [name |-&gt; &quot;UserC&quot;], [name |-&gt; &quot;UserD&quot;], [name |-&gt; &quot;UserE&quot;]&gt;&gt;, absTimelock |-&gt; 40]},&#10;    {&#10;    },&#10;    {&#10;    },&#10;    {&#10;    },&#10;    {&#10;    },&#10;    {&#10;    }&#10;&gt;&gt;;0;0"/>
+        <listEntry value="UserInitialPayments;;&lt;&lt;&#10;    {[id |-&gt; 1, amount |-&gt; 3, path |-&gt; &lt;&lt;[name |-&gt; &quot;UserA&quot;], [name |-&gt; &quot;UserB&quot;], [name |-&gt; &quot;UserC&quot;], [name |-&gt; &quot;UserD&quot;]&gt;&gt;, absTimelock |-&gt; 40]},&#10;    {&#10;    },&#10;    {&#10;    },&#10;    {&#10;    },&#10;    {&#10;    },&#10;    {&#10;    }&#10;&gt;&gt;;0;0"/>
         <listEntry value="MAX_TIME;;50;0;0"/>
         <listEntry value="AllSigHashLock;;AllSigHashLock;1;0"/>
         <listEntry value="SingleSigHashLock;;SingleSigHashLock;1;0"/>
