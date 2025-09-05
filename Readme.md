@@ -36,7 +36,7 @@ How to Run
 ----------
 
 The recommended way is to run the model checker directly on your Unix system. This requires `java` to be in your `$PATH` (on Ubuntu, you can install the `openjdk-17-jre-headless` package, for example).
-Alternatively, you can use the Docker image provided. Note that the model checker can be much slower when using Docker compared to native execution.
+Alternatively, you can use the Docker image provided. Note that the model checker [may be slower](https://mamememo.blogspot.com/2020/05/cpu-intensive-rubypython-code-runs.html) when using Docker compared to native execution.
 The following explanation assumes that the working directory is the root directory of this repository.
 
 ### Natively
@@ -70,7 +70,7 @@ To run the actual models that have been used for the paper, the following option
 | --all    | C1, C2, C3, C4, C5, M1, M2, M3, M4, M5, S1 - S9  | ~ 8 weeks          |
 
 In the third column, the expected runtime on a server with a CPU with 96 physical cores is given (native execution without Docker).
-Using only two CPU cores, the runtime for the value `--brief` is about 12 hours on an Intel Core i7-6700 CPU from 2015 and TODO hours on an AMD EPYC 9174F from 2022.
+Using only two CPU cores, the runtime for the value `--brief` is about 12 hours on an Intel Core i7-6700 CPU from 2015 and about 10 hours on an AMD EPYC 9174F from 2022.
 
 Depending on the number of workers used on your machine, it might be that the default size of memory is not sufficient and the model checker failes with an "Out of memory" error. In this case, you can increase the number of memory available to the model checker by adding the parameter `-Xmx` to `JAVA_OPTS` in `run-tlc.sh` (e.g., `-Xmx32G` for 32 GB).
 
